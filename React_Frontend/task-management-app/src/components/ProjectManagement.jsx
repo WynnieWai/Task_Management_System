@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const statusOptions = ["Active", "Archived"];
 const sampleManagers = ["manager", "admin"];
@@ -133,183 +134,34 @@ export default function ProjectManagement({ user }) {
           <tbody>
             {projects.map((project, idx) => (
               <tr key={idx}>
-                {editIdx === idx ? (
-                  <>
-                    <td className="border px-4 py-2">
-                      <input
-                        className="border px-2 py-1 rounded w-full"
-                        name="title"
-                        value={editProject.title}
-                        onChange={handleFormChange}
-                      />
-                    </td>
-                    <td className="border px-4 py-2">
-                      <input
-                        className="border px-2 py-1 rounded w-full"
-                        name="goals"
-                        value={editProject.goals}
-                        onChange={handleFormChange}
-                      />
-                    </td>
-                    <td className="border px-4 py-2">
-                      <select
-                        className="border px-2 py-1 rounded w-full"
-                        name="status"
-                        value={editProject.status}
-                        onChange={handleFormChange}
-                      >
-                        {statusOptions.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    </td>
-                    {isAdmin && (
-                      <td className="border px-4 py-2">
-                        <select
-                          className="border px-2 py-1 rounded w-full"
-                          name="manager"
-                          value={editProject.manager}
-                          onChange={handleFormChange}
-                        >
-                          {sampleManagers.map((m) => (
-                            <option key={m} value={m}>{m}</option>
-                          ))}
-                        </select>
-                      </td>
-                    )}
-                    <td className="border px-4 py-2">
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          className="border px-2 py-1 rounded w-full"
-                          name="startDate"
-                          value={editProject.startDate}
-                          onChange={handleFormChange}
-                        />
-                        <span>-</span>
-                        <input
-                          type="date"
-                          className="border px-2 py-1 rounded w-full"
-                          name="dueDate"
-                          value={editProject.dueDate}
-                          onChange={handleFormChange}
-                        />
-                      </div>
-                    </td>
-                    <td className="border px-4 py-2">
-                      <select
-                        className="border px-2 py-1 rounded w-full"
-                        name="dueStatus"
-                        value={editProject.dueStatus}
-                        onChange={handleFormChange}
-                      >
-                        {dueStatusOptions.map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="border px-4 py-2">
-                      <input
-                        className="border px-2 py-1 rounded w-full"
-                        name="members"
-                        value={editProject.members.join(", ")}
-                        onChange={handleEditMembers}
-                      />
-                    </td>
-                    <td className="border px-4 py-2">
-                      <input
-                        className="border px-2 py-1 rounded w-full"
-                        name="tasks"
-                        value={editProject.tasks.join(", ")}
-                        onChange={handleEditTasks}
-                      />
-                    </td>
-                    <td className="border px-4 py-2">
-                      <div className="flex gap-2">
-                        <button
-                          className="bg-green-500 text-white px-2 py-1 rounded"
-                          onClick={() => handleSave(idx)}
-                        >
-                          Save
-                        </button>
-                        <button
-                          className="bg-gray-400 text-white px-2 py-1 rounded"
-                          onClick={handleCancel}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className="border px-4 py-2">{project.title}</td>
-                    <td className="border px-4 py-2">{project.goals}</td>
-                    <td className="border px-4 py-2">{project.status}</td>
-                    {isAdmin && <td className="border px-4 py-2">{project.manager}</td>}
-                    <td className="border px-4 py-2">
-                      {project.startDate} - {project.dueDate}
-                    </td>
-                    <td className="border px-4 py-2">{project.dueStatus}</td>
-                    <td className="border px-4 py-2">
-                      <ul className="list-disc pl-4">
-                        {project.members.map((m) => (
-                          <li key={m}>{m}</li>
-                        ))}
-                      </ul>
-                    </td>
-                    <td className="border px-4 py-2">
-                      <ul className="list-disc pl-4">
-                        {project.tasks.map((t) => (
-                          <li key={t}>{t}</li>
-                        ))}
-                      </ul>
-                    </td>
-                    <td className="border px-4 py-2">
-                      {(isAdmin || isManager) ? (
-                        <div className="flex gap-2">
-                          <button
-                            className="bg-yellow-400 px-2 py-1 rounded"
-                            onClick={() => handleEdit(idx)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="bg-red-500 text-white px-2 py-1 rounded"
-                            onClick={() => handleDelete(idx)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">No actions</span>
-                      )}
-                    </td>
-                  </>
-                )}
-              </tr>
-            ))}
-
-            {addingNew && (
-              <tr>
-                <>
-                  <td className="border px-4 py-2">
+                <td className="border px-4 py-2">
+                  {editIdx === idx ? (
                     <input
                       className="border px-2 py-1 rounded w-full"
                       name="title"
                       value={editProject.title}
                       onChange={handleFormChange}
                     />
-                  </td>
-                  <td className="border px-4 py-2">
+                  ) : (
+                    <Link to={`/tasks/${idx}`} className="text-blue-600 underline">
+                      {project.title}
+                    </Link>
+                  )}
+                </td>
+                <td className="border px-4 py-2">
+                  {editIdx === idx ? (
                     <input
                       className="border px-2 py-1 rounded w-full"
                       name="goals"
                       value={editProject.goals}
                       onChange={handleFormChange}
                     />
-                  </td>
-                  <td className="border px-4 py-2">
+                  ) : (
+                    project.goals
+                  )}
+                </td>
+                <td className="border px-4 py-2">
+                  {editIdx === idx ? (
                     <select
                       className="border px-2 py-1 rounded w-full"
                       name="status"
@@ -320,9 +172,13 @@ export default function ProjectManagement({ user }) {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
-                  </td>
-                  {isAdmin && (
-                    <td className="border px-4 py-2">
+                  ) : (
+                    project.status
+                  )}
+                </td>
+                {isAdmin && (
+                  <td className="border px-4 py-2">
+                    {editIdx === idx ? (
                       <select
                         className="border px-2 py-1 rounded w-full"
                         name="manager"
@@ -333,9 +189,13 @@ export default function ProjectManagement({ user }) {
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
-                    </td>
-                  )}
-                  <td className="border px-4 py-2">
+                    ) : (
+                      project.manager
+                    )}
+                  </td>
+                )}
+                <td className="border px-4 py-2">
+                  {editIdx === idx ? (
                     <div className="flex gap-2">
                       <input
                         type="date"
@@ -353,8 +213,12 @@ export default function ProjectManagement({ user }) {
                         onChange={handleFormChange}
                       />
                     </div>
-                  </td>
-                  <td className="border px-4 py-2">
+                  ) : (
+                    `${project.startDate} - ${project.dueDate}`
+                  )}
+                </td>
+                <td className="border px-4 py-2">
+                  {editIdx === idx ? (
                     <select
                       className="border px-2 py-1 rounded w-full"
                       name="dueStatus"
@@ -365,40 +229,189 @@ export default function ProjectManagement({ user }) {
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
-                  </td>
-                  <td className="border px-4 py-2">
+                  ) : (
+                    project.dueStatus
+                  )}
+                </td>
+                <td className="border px-4 py-2">
+                  {editIdx === idx ? (
                     <input
                       className="border px-2 py-1 rounded w-full"
                       name="members"
                       value={editProject.members.join(", ")}
                       onChange={handleEditMembers}
                     />
-                  </td>
-                  <td className="border px-4 py-2">
+                  ) : (
+                    <ul className="list-disc pl-4">
+                      {project.members.map((m) => (
+                        <li key={m}>{m}</li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
+                <td className="border px-4 py-2">
+                  {editIdx === idx ? (
                     <input
                       className="border px-2 py-1 rounded w-full"
                       name="tasks"
                       value={editProject.tasks.join(", ")}
                       onChange={handleEditTasks}
                     />
-                  </td>
-                  <td className="border px-4 py-2">
+                  ) : (
+                    <ul className="list-disc pl-4">
+                      {project.tasks.map((t) => (
+                        <li key={t}>{t}</li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
+                <td className="border px-4 py-2">
+                  {(isAdmin || isManager) && (
                     <div className="flex gap-2">
-                      <button
-                        className="bg-green-500 text-white px-2 py-1 rounded"
-                        onClick={() => handleSave(projects.length)}
-                      >
-                        Add
-                      </button>
-                      <button
-                        className="bg-gray-400 text-white px-2 py-1 rounded"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </button>
+                      {editIdx === idx ? (
+                        <>
+                          <button
+                            className="bg-green-500 text-white px-2 py-1 rounded"
+                            onClick={() => handleSave(idx)}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="bg-gray-400 text-white px-2 py-1 rounded"
+                            onClick={handleCancel}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="bg-yellow-400 px-2 py-1 rounded"
+                            onClick={() => handleEdit(idx)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="bg-red-500 text-white px-2 py-1 rounded"
+                            onClick={() => handleDelete(idx)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+
+            {addingNew && (
+              <tr>
+                <td className="border px-4 py-2">
+                  <input
+                    className="border px-2 py-1 rounded w-full"
+                    name="title"
+                    value={editProject.title}
+                    onChange={handleFormChange}
+                  />
+                </td>
+                <td className="border px-4 py-2">
+                  <input
+                    className="border px-2 py-1 rounded w-full"
+                    name="goals"
+                    value={editProject.goals}
+                    onChange={handleFormChange}
+                  />
+                </td>
+                <td className="border px-4 py-2">
+                  <select
+                    className="border px-2 py-1 rounded w-full"
+                    name="status"
+                    value={editProject.status}
+                    onChange={handleFormChange}
+                  >
+                    {statusOptions.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </td>
+                {isAdmin && (
+                  <td className="border px-4 py-2">
+                    <select
+                      className="border px-2 py-1 rounded w-full"
+                      name="manager"
+                      value={editProject.manager}
+                      onChange={handleFormChange}
+                    >
+                      {sampleManagers.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
                   </td>
-                </>
+                )}
+                <td className="border px-4 py-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      className="border px-2 py-1 rounded w-full"
+                      name="startDate"
+                      value={editProject.startDate}
+                      onChange={handleFormChange}
+                    />
+                    <span>-</span>
+                    <input
+                      type="date"
+                      className="border px-2 py-1 rounded w-full"
+                      name="dueDate"
+                      value={editProject.dueDate}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                </td>
+                <td className="border px-4 py-2">
+                  <select
+                    className="border px-2 py-1 rounded w-full"
+                    name="dueStatus"
+                    value={editProject.dueStatus}
+                    onChange={handleFormChange}
+                  >
+                    {dueStatusOptions.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="border px-4 py-2">
+                  <input
+                    className="border px-2 py-1 rounded w-full"
+                    name="members"
+                    value={editProject.members.join(", ")}
+                    onChange={handleEditMembers}
+                  />
+                </td>
+                <td className="border px-4 py-2">
+                  <input
+                    className="border px-2 py-1 rounded w-full"
+                    name="tasks"
+                    value={editProject.tasks.join(", ")}
+                    onChange={handleEditTasks}
+                  />
+                </td>
+                <td className="border px-4 py-2">
+                  <div className="flex gap-2">
+                    <button
+                      className="bg-green-500 text-white px-2 py-1 rounded"
+                      onClick={() => handleSave(projects.length)}
+                    >
+                      Add
+                    </button>
+                    <button
+                      className="bg-gray-400 text-white px-2 py-1 rounded"
+                      onClick={handleCancel}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </td>
               </tr>
             )}
           </tbody>

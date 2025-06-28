@@ -10,6 +10,7 @@ import ReportsAnalytics from "./components/ReportsAnalytics";
 import Settings from "./components/Settings";
 import Notifications from "./components/Notifications";
 import TaskBoard from "./components/TaskBoard";
+import TaskManagement from "./components/TaskManagement"; 
 import FilesSubmissions from "./components/FilesSubmissions";
 import CommentsDiscussion from "./components/CommentsDiscussion";
 import NotFound from "./components/NotFound";
@@ -70,6 +71,14 @@ function App() {
             element={
               <ProtectedRoute user={user} roles={["manager", "contributor"]}>
                 <TaskBoard user={user} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/:projectId"
+            element={
+              <ProtectedRoute user={user} roles={["admin", "manager", "contributor"]}>
+                <TaskManagement user={user} />
               </ProtectedRoute>
             }
           />
