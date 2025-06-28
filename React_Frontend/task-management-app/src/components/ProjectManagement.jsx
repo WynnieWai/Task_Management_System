@@ -1,40 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 
 const statusOptions = ["Active", "Archived"];
 const sampleManagers = ["manager", "admin"];
 const dueStatusOptions = ["Overdue", "Done on time", "Done overdue"];
 
-const initialProjects = [
-  {
-    title: "Project Alpha",
-    goals: "Launch MVP",
-    status: "Active",
-    manager: "manager",
-    startDate: "2025-06-01",
-    dueDate: "2025-07-01",
-    dueStatus: "Done on time",
-    members: ["manager", "student"],
-    tasks: ["Design UI", "Setup Backend"],
-  },
-  {
-    title: "Project Beta",
-    goals: "Expand features",
-    status: "Archived",
-    manager: "admin",
-    startDate: "2025-05-01",
-    dueDate: "2025-06-15",
-    dueStatus: "Done overdue",
-    members: ["manager", "contributor"],
-    tasks: ["Write Docs", "Testing"],
-  },
-];
-
 export default function ProjectManagement({ user }) {
-  const [projects, setProjects] = useState(initialProjects);
+  const [projects, setProjects] = useState([]);
   const [editIdx, setEditIdx] = useState(null);
   const [editProject, setEditProject] = useState(null);
   const [addingNew, setAddingNew] = useState(false);
+
+  // ---- Load projects from backend on mount ----
+  useEffect(() => {
+    axios
+      .get("http://localhost:5047/api/projects")
+      .then((res) => setProjects(res.data))
+      .catch((err) => alert("Failed to load projects: " + err));
+  }, []);
 
   const isAdmin = user && user.role.toLowerCase() === "admin";
   const isManager = user && user.role.toLowerCase() === "manager";
@@ -59,19 +43,35 @@ export default function ProjectManagement({ user }) {
     }));
   };
 
+  // ---- Edit Project ----
   const handleEdit = (idx) => {
     setEditIdx(idx);
     setEditProject({ ...projects[idx] });
     setAddingNew(false);
   };
 
+  // ---- Add/Edit Save ----
   const handleSave = (idx) => {
     if (addingNew) {
-      setProjects([...projects, editProject]);
+      // Add new project
+      axios
+        .post("http://localhost:5047/api/projects", editProject)
+        .then((res) => setProjects([...projects, res.data]))
+        .catch((err) => alert("Failed to add project: " + err));
       setAddingNew(false);
     } else {
-      const updated = projects.map((p, i) => (i === idx ? editProject : p));
-      setProjects(updated);
+      // Update project
+      const projectId = projects[editIdx].id;
+      axios
+        .put(`http://localhost:5047/api/projects/${projectId}`, editProject)
+        .then(() => {
+          // Update local state
+          const updated = projects.map((p, i) =>
+            i === editIdx ? { ...editProject, id: projectId } : p
+          );
+          setProjects(updated);
+        })
+        .catch((err) => alert("Failed to update project: " + err));
     }
     setEditIdx(null);
     setEditProject(null);
@@ -83,8 +83,13 @@ export default function ProjectManagement({ user }) {
     setAddingNew(false);
   };
 
+  // ---- Delete ----
   const handleDelete = (idx) => {
-    setProjects(projects.filter((_, i) => i !== idx));
+    const projectId = projects[idx].id;
+    axios
+      .delete(`http://localhost:5047/api/projects/${projectId}`)
+      .then(() => setProjects(projects.filter((_, i) => i !== idx)))
+      .catch((err) => alert("Failed to delete project: " + err));
   };
 
   const handleAddNew = () => {
@@ -102,6 +107,14 @@ export default function ProjectManagement({ user }) {
     });
   };
 
+  // Utility: Convert to array if not already (for backend responses)
+  const ensureArray = (val) =>
+    Array.isArray(val)
+      ? val
+      : typeof val === "string"
+      ? val.split(",").map((v) => v.trim()).filter(Boolean)
+      : [];
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Project Management</h1>
@@ -110,6 +123,7 @@ export default function ProjectManagement({ user }) {
         <button
           className="mb-4 bg-blue-600 text-white px-4 py-2 rounded"
           onClick={handleAddNew}
+          disabled={addingNew}
         >
           Create New Project
         </button>
@@ -124,26 +138,28 @@ export default function ProjectManagement({ user }) {
               <th className="border px-4 py-2">Status</th>
               {isAdmin && <th className="border px-4 py-2">Assigned Manager</th>}
               <th className="border px-4 py-2">Timeline</th>
-              <th className="border px-4 py-2">Due Date</th>
+              <th className="border px-4 py-2">Due Status</th>
               <th className="border px-4 py-2">Project Members</th>
               <th className="border px-4 py-2">List of Tasks</th>
               <th className="border px-4 py-2">Actions</th>
             </tr>
           </thead>
-
           <tbody>
             {projects.map((project, idx) => (
-              <tr key={idx}>
+              <tr key={project.id || idx}>
                 <td className="border px-4 py-2">
                   {editIdx === idx ? (
                     <input
                       className="border px-2 py-1 rounded w-full"
                       name="title"
-                      value={editProject.title}
+                      value={editProject?.title ?? ""}
                       onChange={handleFormChange}
                     />
                   ) : (
-                    <Link to={`/tasks/${idx}`} className="text-blue-600 underline">
+                    <Link
+                      to={`/tasks/${project.id || idx}`}
+                      className="text-blue-600 underline hover:text-blue-800"
+                    >
                       {project.title}
                     </Link>
                   )}
@@ -153,7 +169,7 @@ export default function ProjectManagement({ user }) {
                     <input
                       className="border px-2 py-1 rounded w-full"
                       name="goals"
-                      value={editProject.goals}
+                      value={editProject?.goals ?? ""}
                       onChange={handleFormChange}
                     />
                   ) : (
@@ -165,7 +181,7 @@ export default function ProjectManagement({ user }) {
                     <select
                       className="border px-2 py-1 rounded w-full"
                       name="status"
-                      value={editProject.status}
+                      value={editProject?.status ?? statusOptions[0]}
                       onChange={handleFormChange}
                     >
                       {statusOptions.map((s) => (
@@ -182,7 +198,7 @@ export default function ProjectManagement({ user }) {
                       <select
                         className="border px-2 py-1 rounded w-full"
                         name="manager"
-                        value={editProject.manager}
+                        value={editProject?.manager ?? sampleManagers[0]}
                         onChange={handleFormChange}
                       >
                         {sampleManagers.map((m) => (
@@ -201,7 +217,7 @@ export default function ProjectManagement({ user }) {
                         type="date"
                         className="border px-2 py-1 rounded w-full"
                         name="startDate"
-                        value={editProject.startDate}
+                        value={editProject?.startDate ?? ""}
                         onChange={handleFormChange}
                       />
                       <span>-</span>
@@ -209,7 +225,7 @@ export default function ProjectManagement({ user }) {
                         type="date"
                         className="border px-2 py-1 rounded w-full"
                         name="dueDate"
-                        value={editProject.dueDate}
+                        value={editProject?.dueDate ?? ""}
                         onChange={handleFormChange}
                       />
                     </div>
@@ -222,7 +238,7 @@ export default function ProjectManagement({ user }) {
                     <select
                       className="border px-2 py-1 rounded w-full"
                       name="dueStatus"
-                      value={editProject.dueStatus}
+                      value={editProject?.dueStatus ?? dueStatusOptions[0]}
                       onChange={handleFormChange}
                     >
                       {dueStatusOptions.map((d) => (
@@ -238,12 +254,12 @@ export default function ProjectManagement({ user }) {
                     <input
                       className="border px-2 py-1 rounded w-full"
                       name="members"
-                      value={editProject.members.join(", ")}
+                      value={editProject?.members?.join(", ") ?? ""}
                       onChange={handleEditMembers}
                     />
                   ) : (
                     <ul className="list-disc pl-4">
-                      {project.members.map((m) => (
+                      {ensureArray(project.members).map((m) => (
                         <li key={m}>{m}</li>
                       ))}
                     </ul>
@@ -254,19 +270,19 @@ export default function ProjectManagement({ user }) {
                     <input
                       className="border px-2 py-1 rounded w-full"
                       name="tasks"
-                      value={editProject.tasks.join(", ")}
+                      value={editProject?.tasks?.join(", ") ?? ""}
                       onChange={handleEditTasks}
                     />
                   ) : (
                     <ul className="list-disc pl-4">
-                      {project.tasks.map((t) => (
+                      {ensureArray(project.tasks).map((t) => (
                         <li key={t}>{t}</li>
                       ))}
                     </ul>
                   )}
                 </td>
                 <td className="border px-4 py-2">
-                  {(isAdmin || isManager) && (
+                  {(isAdmin || isManager) ? (
                     <div className="flex gap-2">
                       {editIdx === idx ? (
                         <>
@@ -300,6 +316,8 @@ export default function ProjectManagement({ user }) {
                         </>
                       )}
                     </div>
+                  ) : (
+                    <span className="text-gray-500">No actions</span>
                   )}
                 </td>
               </tr>
