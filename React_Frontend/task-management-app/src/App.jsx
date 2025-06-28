@@ -65,6 +65,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute user={user} roles={["manager", "contributor"]}>
+                <TaskBoard user={user} />
+              </ProtectedRoute>
+            }
+          />
+
           {/* ... other routes remain unchanged */}
           <Route path="*" element={<NotFound />} />
         </Routes>
