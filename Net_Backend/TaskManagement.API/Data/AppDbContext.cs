@@ -1,0 +1,10 @@
+using Microsoft.EntityFrameworkCore;
+using TaskManagement.API.Models.Domain;
+
+namespace TaskManagement.API.Data
+{
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+    {
+        public DbSet<User> Users { get; set; }
+    }
+}
