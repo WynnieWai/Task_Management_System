@@ -124,7 +124,15 @@ namespace TaskManagement.API.Controllers
             user.Role = updateUserDTO.Role;
             _context.SaveChanges();
 
-            return Ok(user);
+            var userDto = new UserDTO
+            {
+                Id = user.Id,
+                UserId = user.UserId,
+                Username = user.Username,
+                Role = user.Role
+            };
+
+            return Ok(userDto);
         }
 
         // DELETE: api/User/{id}

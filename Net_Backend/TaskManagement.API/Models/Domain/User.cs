@@ -1,6 +1,6 @@
 namespace TaskManagement.API.Models.Domain
 {
-        public class User
+    public class User
     {
         public Guid Id { get; set; }
         public int UserId { get; set; }
