@@ -3,7 +3,6 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 
 const statusOptions = ["Active", "Archived"];
-const sampleManagers = ["manager", "admin"];
 const dueStatusOptions = ["Overdue", "Done on time", "Done overdue"];
 
 export default function ProjectManagement({ user }) {
@@ -11,13 +10,19 @@ export default function ProjectManagement({ user }) {
   const [editIdx, setEditIdx] = useState(null);
   const [editProject, setEditProject] = useState(null);
   const [addingNew, setAddingNew] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
 
-  // ---- Load projects from backend on mount ----
+  // ---- Load projects and users from backend on mount ----
   useEffect(() => {
     axios
       .get("http://localhost:5047/api/projects")
       .then((res) => setProjects(res.data))
       .catch((err) => alert("Failed to load projects: " + err));
+
+    axios
+      .get("http://localhost:5047/api/User")
+      .then((res) => setAllUsers(res.data))
+      .catch((err) => alert("Failed to load users: " + err));
   }, []);
 
   const isAdmin = user && user.role.toLowerCase() === "admin";
@@ -27,13 +32,6 @@ export default function ProjectManagement({ user }) {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setEditProject((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditMembers = (e) => {
-    setEditProject((prev) => ({
-      ...prev,
-      members: e.target.value.split(",").map((m) => m.trim()).filter(Boolean),
-    }));
   };
 
   const handleEditTasks = (e) => {
@@ -46,16 +44,28 @@ export default function ProjectManagement({ user }) {
   // ---- Edit Project ----
   const handleEdit = (idx) => {
     setEditIdx(idx);
-    setEditProject({ ...projects[idx] });
+    // Ensure members and tasks are arrays
+    setEditProject({
+      ...projects[idx],
+      members: ensureArray(projects[idx].members),
+      tasks: ensureArray(projects[idx].tasks),
+    });
     setAddingNew(false);
   };
 
   // ---- Add/Edit Save ----
   const handleSave = (idx) => {
+    // Prepare members/tasks as arrays for backend
+    const payload = {
+      ...editProject,
+      members: editProject.members,
+      tasks: editProject.tasks,
+    };
+
     if (addingNew) {
       // Add new project
       axios
-        .post("http://localhost:5047/api/projects", editProject)
+        .post("http://localhost:5047/api/projects", payload)
         .then((res) => setProjects([...projects, res.data]))
         .catch((err) => alert("Failed to add project: " + err));
       setAddingNew(false);
@@ -63,7 +73,7 @@ export default function ProjectManagement({ user }) {
       // Update project
       const projectId = projects[editIdx].id;
       axios
-        .put(`http://localhost:5047/api/projects/${projectId}`, editProject)
+        .put(`http://localhost:5047/api/projects/${projectId}`, payload)
         .then(() => {
           // Update local state
           const updated = projects.map((p, i) =>
@@ -98,7 +108,7 @@ export default function ProjectManagement({ user }) {
       title: "",
       goals: "",
       status: statusOptions[0],
-      manager: sampleManagers[0],
+      manager: "",
       startDate: "",
       dueDate: "",
       dueStatus: dueStatusOptions[0],
@@ -107,13 +117,34 @@ export default function ProjectManagement({ user }) {
     });
   };
 
+  // Handle checkbox selection for members
+  const handleMemberCheckboxChange = (e, username) => {
+    const { checked } = e.target;
+    setEditProject((prev) => {
+      const members = prev.members || [];
+      return {
+        ...prev,
+        members: checked
+          ? [...members, username]
+          : members.filter((m) => m !== username),
+      };
+    });
+  };
+
   // Utility: Convert to array if not already (for backend responses)
   const ensureArray = (val) =>
     Array.isArray(val)
       ? val
       : typeof val === "string"
-      ? val.split(",").map((v) => v.trim()).filter(Boolean)
-      : [];
+        ? val.split(",").map((v) => v.trim()).filter(Boolean)
+        : [];
+
+  // Get all managers for dropdown
+  const managerUsers = allUsers.filter(
+    (u) =>
+      u.role.toLowerCase() === "manager" ||
+      u.role.toLowerCase() === "projectmanager"
+  );
 
   return (
     <div className="p-8">
@@ -198,11 +229,14 @@ export default function ProjectManagement({ user }) {
                       <select
                         className="border px-2 py-1 rounded w-full"
                         name="manager"
-                        value={editProject?.manager ?? sampleManagers[0]}
+                        value={editProject?.manager ?? ""}
                         onChange={handleFormChange}
                       >
-                        {sampleManagers.map((m) => (
-                          <option key={m} value={m}>{m}</option>
+                        <option value="">Select Manager</option>
+                        {managerUsers.map((u) => (
+                          <option key={u.userId} value={u.username}>
+                            {u.username}
+                          </option>
                         ))}
                       </select>
                     ) : (
@@ -251,18 +285,30 @@ export default function ProjectManagement({ user }) {
                 </td>
                 <td className="border px-4 py-2">
                   {editIdx === idx ? (
-                    <input
-                      className="border px-2 py-1 rounded w-full"
-                      name="members"
-                      value={editProject?.members?.join(", ") ?? ""}
-                      onChange={handleEditMembers}
-                    />
-                  ) : (
-                    <ul className="list-disc pl-4">
-                      {ensureArray(project.members).map((m) => (
-                        <li key={m}>{m}</li>
+                    <div className="max-h-40 overflow-y-auto">
+                      {allUsers.map((u) => (
+                        <div key={u.userId} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`member-${idx}-${u.userId}`}
+                            checked={editProject?.members?.includes(u.username) || false}
+                            onChange={(e) => handleMemberCheckboxChange(e, u.username)}
+                            className="mr-2"
+                          />
+                          <label htmlFor={`member-${idx}-${u.userId}`}>
+                            {u.username} ({u.role})
+                          </label>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
+                  ) : (
+                    <div className="max-h-30 overflow-y-auto">
+                      <ul className="list-disc pl-4">
+                        {ensureArray(project.members).map((m) => (
+                          <li key={m}>{m}</li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </td>
                 <td className="border px-4 py-2">
@@ -361,8 +407,11 @@ export default function ProjectManagement({ user }) {
                       value={editProject.manager}
                       onChange={handleFormChange}
                     >
-                      {sampleManagers.map((m) => (
-                        <option key={m} value={m}>{m}</option>
+                      <option value="">Select Manager</option>
+                      {managerUsers.map((u) => (
+                        <option key={u.userId} value={u.username}>
+                          {u.username}
+                        </option>
                       ))}
                     </select>
                   </td>
@@ -399,12 +448,22 @@ export default function ProjectManagement({ user }) {
                   </select>
                 </td>
                 <td className="border px-4 py-2">
-                  <input
-                    className="border px-2 py-1 rounded w-full"
-                    name="members"
-                    value={editProject.members.join(", ")}
-                    onChange={handleEditMembers}
-                  />
+                  <div className="max-h-40 overflow-y-auto">
+                    {allUsers.map((u) => (
+                      <div key={u.userId} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`new-member-${u.userId}`}
+                          checked={editProject.members.includes(u.username)}
+                          onChange={(e) => handleMemberCheckboxChange(e, u.username)}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`new-member-${u.userId}`}>
+                          {u.username} ({u.role})
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </td>
                 <td className="border px-4 py-2">
                   <input

@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+:root {
+  --primary-color: #0073ea;
+  --secondary-color: #f5f7fa;
+  --accent-color: #00c875;
+  --font-sans: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--secondary-color);
+  color: #333;
+}
