@@ -82,6 +82,8 @@ export default function ProjectManagement({ user }) {
       ...editProject,
       members: editProject.members,
       tasks: editProject.tasks,
+      startDate: editProject.startDate ? new Date(editProject.startDate).toISOString() : "",
+      dueDate: editProject.dueDate ? new Date(editProject.dueDate).toISOString() : "",
     };
 
     if (addingNew) {
@@ -280,7 +282,7 @@ export default function ProjectManagement({ user }) {
                         type="date"
                         className="border px-2 py-1 rounded w-full"
                         name="startDate"
-                        value={editProject?.startDate ?? ""}
+                        value={editProject?.startDate?.substring(0, 10) ?? ""}
                         onChange={handleFormChange}
                       />
                       <span>-</span>
@@ -288,7 +290,7 @@ export default function ProjectManagement({ user }) {
                         type="date"
                         className="border px-2 py-1 rounded w-full"
                         name="dueDate"
-                        value={editProject?.dueDate ?? ""}
+                        value={editProject?.dueDate?.substring(0, 10) ?? ""}
                         onChange={handleFormChange}
                       />
                     </div>

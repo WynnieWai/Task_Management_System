@@ -1,8 +1,144 @@
 {
   "Files": [
     {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\00d05ebb-bfff-4ca4-b1ae-6e810a3c3cb4.pdf",
+      "PackagePath": "staticwebassets\\uploads\\00d05ebb-bfff-4ca4-b1ae-6e810a3c3cb4.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\02ae2cfd-6208-4695-b167-5898a7724786.pdf",
+      "PackagePath": "staticwebassets\\uploads\\02ae2cfd-6208-4695-b167-5898a7724786.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\0860912f-2ede-400a-bbaf-35032604114c.pdf",
+      "PackagePath": "staticwebassets\\uploads\\0860912f-2ede-400a-bbaf-35032604114c.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\097a4173-8553-4f6e-a9d7-24291a51a31b.pdf",
+      "PackagePath": "staticwebassets\\uploads\\097a4173-8553-4f6e-a9d7-24291a51a31b.pdf"
+    },
+    {
       "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\0a7d7653-ca8f-40da-9f26-46877125066b.pdf",
       "PackagePath": "staticwebassets\\uploads\\0a7d7653-ca8f-40da-9f26-46877125066b.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\0d61f99f-0203-4360-bc04-7ebc661b83e4.pdf",
+      "PackagePath": "staticwebassets\\uploads\\0d61f99f-0203-4360-bc04-7ebc661b83e4.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\11668a8c-217b-4afa-8900-2d76134b4940.pdf",
+      "PackagePath": "staticwebassets\\uploads\\11668a8c-217b-4afa-8900-2d76134b4940.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\17b73467-8791-4952-bb55-7360f9f6bcbb.pdf",
+      "PackagePath": "staticwebassets\\uploads\\17b73467-8791-4952-bb55-7360f9f6bcbb.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\18e685aa-8497-45f4-bdb6-d89c4bc0a1fe.pdf",
+      "PackagePath": "staticwebassets\\uploads\\18e685aa-8497-45f4-bdb6-d89c4bc0a1fe.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\1f4d1c8b-6186-42f2-83b7-b9544afaeb72.pdf",
+      "PackagePath": "staticwebassets\\uploads\\1f4d1c8b-6186-42f2-83b7-b9544afaeb72.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\38680cec-9e42-4716-b0bd-0653a7766320.pdf",
+      "PackagePath": "staticwebassets\\uploads\\38680cec-9e42-4716-b0bd-0653a7766320.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\44b08683-ea40-4935-bcf1-153dc82346a9.pdf",
+      "PackagePath": "staticwebassets\\uploads\\44b08683-ea40-4935-bcf1-153dc82346a9.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\49546c6f-9957-43fb-91d1-09871dc54c22.pdf",
+      "PackagePath": "staticwebassets\\uploads\\49546c6f-9957-43fb-91d1-09871dc54c22.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\4ff03ded-9a84-4ed3-b8c5-0d3fe6ab337f.pdf",
+      "PackagePath": "staticwebassets\\uploads\\4ff03ded-9a84-4ed3-b8c5-0d3fe6ab337f.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\519878eb-e45e-4044-b5d7-887a96caef2b.pdf",
+      "PackagePath": "staticwebassets\\uploads\\519878eb-e45e-4044-b5d7-887a96caef2b.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\5e6507d8-f899-4f4e-876e-22024a883739.pdf",
+      "PackagePath": "staticwebassets\\uploads\\5e6507d8-f899-4f4e-876e-22024a883739.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\74e4b561-a157-4fd7-9884-fcf208117d47.pdf",
+      "PackagePath": "staticwebassets\\uploads\\74e4b561-a157-4fd7-9884-fcf208117d47.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\76fa8be8-6b8e-44fc-a8bf-2edfc5b6900c.pdf",
+      "PackagePath": "staticwebassets\\uploads\\76fa8be8-6b8e-44fc-a8bf-2edfc5b6900c.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\7e1ae2ae-3b98-4945-b658-ae2bf6ab4e38.pdf",
+      "PackagePath": "staticwebassets\\uploads\\7e1ae2ae-3b98-4945-b658-ae2bf6ab4e38.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\8ab7c868-a239-486a-b8c2-5982653fe06f.pdf",
+      "PackagePath": "staticwebassets\\uploads\\8ab7c868-a239-486a-b8c2-5982653fe06f.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\8c5575c3-c7ce-44af-b589-b129ee2a6b3e.pdf",
+      "PackagePath": "staticwebassets\\uploads\\8c5575c3-c7ce-44af-b589-b129ee2a6b3e.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\9394a3cf-9ab6-43f4-9980-90776856f7a0.pdf",
+      "PackagePath": "staticwebassets\\uploads\\9394a3cf-9ab6-43f4-9980-90776856f7a0.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\9556006f-2d40-4da6-ad9b-3dc4f3f20528.pdf",
+      "PackagePath": "staticwebassets\\uploads\\9556006f-2d40-4da6-ad9b-3dc4f3f20528.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\a440d58d-9f92-4259-bfc2-aa667a0abbaa.pdf",
+      "PackagePath": "staticwebassets\\uploads\\a440d58d-9f92-4259-bfc2-aa667a0abbaa.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\aee8d672-d1eb-40d1-bda6-385f531f2725.pdf",
+      "PackagePath": "staticwebassets\\uploads\\aee8d672-d1eb-40d1-bda6-385f531f2725.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\bb50d00e-be72-4eb8-9b1a-cddaf8c47c82.pdf",
+      "PackagePath": "staticwebassets\\uploads\\bb50d00e-be72-4eb8-9b1a-cddaf8c47c82.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\bc17d058-fa31-4c6b-a57d-1937897e4ebf.pdf",
+      "PackagePath": "staticwebassets\\uploads\\bc17d058-fa31-4c6b-a57d-1937897e4ebf.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\d44df0d0-a4c7-43b5-98b0-21d0565aff9e.pdf",
+      "PackagePath": "staticwebassets\\uploads\\d44df0d0-a4c7-43b5-98b0-21d0565aff9e.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\d77b24ff-5337-4f78-be82-40e51f5baa1a.pdf",
+      "PackagePath": "staticwebassets\\uploads\\d77b24ff-5337-4f78-be82-40e51f5baa1a.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\db039f61-669e-429b-a31b-9193a9185cc0.pdf",
+      "PackagePath": "staticwebassets\\uploads\\db039f61-669e-429b-a31b-9193a9185cc0.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\e01a0459-61fb-46c1-bf58-b864607f8439.pdf",
+      "PackagePath": "staticwebassets\\uploads\\e01a0459-61fb-46c1-bf58-b864607f8439.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\e0e38ae2-8272-4885-976d-ee45220cee76.pdf",
+      "PackagePath": "staticwebassets\\uploads\\e0e38ae2-8272-4885-976d-ee45220cee76.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\e14abd2b-afd7-498d-8480-36d2f9cc5412.pdf",
+      "PackagePath": "staticwebassets\\uploads\\e14abd2b-afd7-498d-8480-36d2f9cc5412.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\efd529b0-6f5e-44ec-a912-3d1a2b395c25.pdf",
+      "PackagePath": "staticwebassets\\uploads\\efd529b0-6f5e-44ec-a912-3d1a2b395c25.pdf"
+    },
+    {
+      "Id": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\fee07e55-d1fa-4c29-9342-4040cd69bdb5.pdf",
+      "PackagePath": "staticwebassets\\uploads\\fee07e55-d1fa-4c29-9342-4040cd69bdb5.pdf"
     },
     {
       "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.TaskManagement.API.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",

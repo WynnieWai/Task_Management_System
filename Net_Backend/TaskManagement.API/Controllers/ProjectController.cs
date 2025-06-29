@@ -17,7 +17,10 @@ public class ProjectsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetProjects()
     {
-        var projects = await _context.Projects.ToListAsync();
+        var projects = await _context.Projects
+            .Include(p => p.Tasks)
+            .ToListAsync();
+
         return Ok(projects.Select(p => new ProjectDto
         {
             Id = p.Id,
@@ -29,7 +32,7 @@ public class ProjectsController : ControllerBase
             DueDate = p.DueDate,
             DueStatus = p.DueStatus,
             Members = p.Members?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToArray() ?? new string[0],
-            Tasks = p.Tasks?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToArray() ?? new string[0]
+            Tasks = p.Tasks?.Select(t => t.Title).ToArray() ?? new string[0]
         }));
     }
 
@@ -46,7 +49,6 @@ public class ProjectsController : ControllerBase
             DueDate = dto.DueDate,
             DueStatus = dto.DueStatus,
             Members = string.Join(",", dto.Members ?? new string[0]),
-            Tasks = string.Join(",", dto.Tasks ?? new string[0])
         };
         _context.Projects.Add(project);
         await _context.SaveChangesAsync();
@@ -58,7 +60,9 @@ public class ProjectsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProject(int id, ProjectDto dto)
     {
-        var project = await _context.Projects.FindAsync(id);
+        var project = await _context.Projects
+            .Include(p => p.Tasks)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (project == null) return NotFound();
 
         project.Title = dto.Title;
@@ -69,7 +73,7 @@ public class ProjectsController : ControllerBase
         project.DueDate = dto.DueDate;
         project.DueStatus = dto.DueStatus;
         project.Members = string.Join(",", dto.Members ?? new string[0]);
-        project.Tasks = string.Join(",", dto.Tasks ?? new string[0]);
+        // project.Tasks = string.Join(",", dto.Tasks ?? new string[0]);
 
         await _context.SaveChangesAsync();
         return NoContent();
@@ -78,7 +82,9 @@ public class ProjectsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProject(int id)
     {
-        var project = await _context.Projects.FindAsync(id);
+        var project = await _context.Projects
+            .Include(p => p.Tasks)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (project == null) return NotFound();
 
         _context.Projects.Remove(project);

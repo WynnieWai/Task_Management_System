@@ -23,94 +23,85 @@
 //   );
 // } 
 
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getProjectsWithTasks } from "../API/TaskBoardAPI";
 import TaskDetail from "./TaskDetail";
 
-const initialTasks = [
-  {
-    id: 1,
-    title: "Task 1",
-    description: "Design the project wireframes.",
-    timeline: "Jun 5 - Jun 11",
-    dueDate: "2024-06-11",
-    priority: "Low",
-    status: "To-Do",
-    submission: null,
-    comments: [
-      { user: "manager", text: "Please start ASAP." },
-      { user: "student", text: "Will do!" }
-    ]
-  },
-  {
-    id: 2,
-    title: "Task 2",
-    description: "Set up the backend API.",
-    timeline: "Jun 12 - Jun 18",
-    dueDate: "2024-06-18",
-    priority: "Medium",
-    status: "To-Do",
-    submission: null,
-    comments: []
-  },
-  {
-    id: 3,
-    title: "Task 3",
-    description: "Implement authentication.",
-    timeline: "Jun 19 - Jun 25",
-    dueDate: "2024-06-25",
-    priority: "High",
-    status: "In Progress",
-    submission: null,
-    comments: []
-  },
-  {
-    id: 4,
-    title: "Task 4",
-    description: "Write documentation.",
-    timeline: "Jun 26 - Jul 2",
-    dueDate: "2024-07-02",
-    priority: "Low",
-    status: "Done",
-    submission: "doc.pdf",
-    comments: [{ user: "manager", text: "Great job!" }]
-  }
-];
-
 export default function TaskBoard({ user }) {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [projects, setProjects] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
 
-  // Update task in state (for submission, status, comments)
-  const updateTask = (updatedTask) => {
-    setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+  // Load projects with tasks on mount
+  useEffect(() => {
+    getProjectsWithTasks()
+      .then(setProjects)
+      .catch(e => alert("Failed to load projects: " + e));
+  }, []);
+
+  if (!user || !["manager", "contributor"].includes(user.role.toLowerCase())) {
+    return <div className="p-8">Access Denied</div>;
+  }
+
+  // Helper to update a single task inside its project
+  const handleTaskUpdate = (updatedTask) => {
+    setProjects(prev =>
+      prev.map(project =>
+        // Find the project the task belongs to
+        project.id === (selectedTask?.project?.id ?? updatedTask.projectId)
+          ? {
+              ...project,
+              tasks: project.tasks.map(t =>
+                t.id === updatedTask.id ? updatedTask : t
+              ),
+            }
+          : project
+      )
+    );
+    setSelectedTask(null); // Close modal after update
   };
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Task Board</h1>
-      <div className="flex gap-4">
-        {["To-Do", "In Progress", "Done"].map(status => (
-          <div key={status} className="flex-1 bg-gray-100 p-4 rounded shadow">
-            <h2 className="font-semibold mb-2">{status}</h2>
-            {tasks.filter(t => t.status === status).map(task => (
-              <div
-                key={task.id}
-                className="bg-white p-2 rounded mb-2 cursor-pointer hover:bg-blue-100"
-                onClick={() => setSelectedTask(task)}
-              >
-                {task.title}
+      <h1 className="text-2xl font-bold mb-6">All Projects</h1>
+      {projects.map(project => (
+        <div key={project.id} className="mb-12">
+          <div className="mb-2 text-xl font-bold">{project.name}:</div>
+          <div className="grid grid-cols-4 gap-4 bg-white rounded-xl shadow p-6">
+            {["To-Do", "In Progress", "Done", "All Tasks"].map((status) => (
+              <div key={status} className="bg-gray-100 rounded-lg p-4 min-h-[180px]">
+                <div className="font-semibold mb-2">{status}</div>
+                {status !== "All Tasks"
+                  ? project.tasks.filter(t => t.status === status).map(task => (
+                      <div
+                        key={task.id}
+                        className="bg-white p-2 rounded mb-2 shadow cursor-pointer hover:bg-blue-100"
+                        onClick={() => setSelectedTask({ task, project })}
+                      >
+                        {task.title}
+                      </div>
+                    ))
+                  : project.tasks.map(task => (
+                      <div
+                        key={task.id}
+                        className="bg-white p-2 rounded mb-2 shadow cursor-pointer hover:bg-blue-100"
+                        onClick={() => setSelectedTask({ task, project })}
+                      >
+                        {task.title}
+                      </div>
+                    ))}
               </div>
             ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
+
+      {/* Modal for task details */}
       {selectedTask && (
         <TaskDetail
           user={user}
-          task={selectedTask}
+          task={selectedTask.task}
           onClose={() => setSelectedTask(null)}
-          onUpdate={updateTask}
+          onUpdate={handleTaskUpdate}
         />
       )}
     </div>
