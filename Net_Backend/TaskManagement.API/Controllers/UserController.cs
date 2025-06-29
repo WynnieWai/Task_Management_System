@@ -111,6 +111,28 @@ namespace TaskManagement.API.Controllers
             return CreatedAtAction(nameof(GetUserById), new { userId = user.UserId }, user);
         }
 
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginDTO loginDto)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Username == loginDto.Username);
+
+            if (user == null)
+                return Unauthorized(new { message = "Invalid username or password" });
+
+            // For demo: compare plain password (in production, use hashing)
+            if (user.PasswordHash != loginDto.Password)
+                return Unauthorized(new { message = "Invalid username or password" });
+
+            // Return user info (without password)
+            return Ok(new
+            {
+                id = user.Id,
+                userId = user.UserId,
+                username = user.Username,
+                role = user.Role
+            });
+        }
+
         // PUT: api/User/{id}
         [HttpPut("{userId:int}")]
         public IActionResult UpdateUserById([FromRoute] int userId, [FromBody] UpdateUserDTO updateUserDTO)

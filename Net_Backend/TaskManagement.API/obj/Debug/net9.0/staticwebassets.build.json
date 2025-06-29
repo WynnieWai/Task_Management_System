@@ -1,12 +1,20 @@
 {
   "Version": 1,
-  "Hash": "seoso8kWtVASOeVikJtKwz6ROA3/9X6zjprNhTXgxoQ=",
+  "Hash": "GNS3jRlYkufX38CHEgOGSxp2C9oiXpReKXHA8pFjF0A=",
   "Source": "TaskManagement.API",
   "BasePath": "_content/TaskManagement.API",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "TaskManagement.API\\wwwroot",
+      "Source": "TaskManagement.API",
+      "ContentRoot": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\",
+      "BasePath": "_content/TaskManagement.API",
+      "Pattern": "**"
+    }
+  ],
   "Assets": [],
   "Endpoints": []
 }

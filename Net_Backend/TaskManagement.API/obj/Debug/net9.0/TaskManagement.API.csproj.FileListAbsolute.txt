@@ -330,3 +330,4 @@ C:\Users\wwn\OneDrive\Desktop\Programming Elective II (2)\PE Code\Group_Project\
 C:\Users\wwn\OneDrive\Desktop\Programming Elective II (2)\PE Code\Group_Project\Task_Management_System\Net_Backend\TaskManagement.API\obj\Debug\net9.0\TaskManagement.API.pdb
 C:\Users\wwn\OneDrive\Desktop\Programming Elective II (2)\PE Code\Group_Project\Task_Management_System\Net_Backend\TaskManagement.API\obj\Debug\net9.0\TaskManagement.API.genruntimeconfig.cache
 C:\Users\wwn\OneDrive\Desktop\Programming Elective II (2)\PE Code\Group_Project\Task_Management_System\Net_Backend\TaskManagement.API\obj\Debug\net9.0\ref\TaskManagement.API.dll
+C:\Users\wwn\OneDrive\Desktop\Programming Elective II (2)\PE Code\Group_Project\Task_Management_System\Net_Backend\TaskManagement.API\bin\Debug\net9.0\TaskManagement.API.staticwebassets.runtime.json

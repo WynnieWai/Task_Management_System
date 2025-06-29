@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TaskManagement.API.Data;
+using TaskManagement.API.Models.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,10 +18,26 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll",
         policy => policy.AllowAnyOrigin()
                         .AllowAnyMethod()
-                        .AllowAnyHeader());
+                        .AllowAnyHeader()
+                        .WithExposedHeaders("Content-Disposition"));
 });
 
 var app = builder.Build();
+
+// Seed users if not present
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    if (!db.Users.Any())
+    {
+        db.Users.AddRange(
+            new User { Id = Guid.NewGuid(), UserId = 1, Username = "admin", PasswordHash = "admin123", Role = "Admin" },
+            new User { Id = Guid.NewGuid(), UserId = 2, Username = "manager", PasswordHash = "manager123", Role = "ProjectManager" },
+            new User { Id = Guid.NewGuid(), UserId = 3, Username = "student", PasswordHash = "student123", Role = "Contributor" }
+        );
+        db.SaveChanges();
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -29,6 +46,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles(); // For wwwroot
+
+// Serve /uploads
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads")),
+    RequestPath = "/uploads"
+});
 
 app.UseAuthorization();
 
