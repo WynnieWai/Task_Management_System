@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "GNS3jRlYkufX38CHEgOGSxp2C9oiXpReKXHA8pFjF0A=",
+  "Hash": "F49v6wTUdVhRPaA8VPpqVs25w/yi7LDrJcVyIGqMu7k=",
   "Source": "TaskManagement.API",
   "BasePath": "_content/TaskManagement.API",
   "Mode": "Default",
@@ -15,6 +15,111 @@
       "Pattern": "**"
     }
   ],
-  "Assets": [],
-  "Endpoints": []
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\0a7d7653-ca8f-40da-9f26-46877125066b.pdf",
+      "SourceId": "TaskManagement.API",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\",
+      "BasePath": "_content/TaskManagement.API",
+      "RelativePath": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b#[.{fingerprint}]?.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "zgnsbng2ge",
+      "Integrity": "04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\0a7d7653-ca8f-40da-9f26-46877125066b.pdf"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b.pdf",
+      "AssetFile": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\0a7d7653-ca8f-40da-9f26-46877125066b.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "238816"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 29 Jun 2025 06:07:12 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b.zgnsbng2ge.pdf",
+      "AssetFile": "C:\\Users\\wwn\\OneDrive\\Desktop\\Programming Elective II (2)\\PE Code\\Group_Project\\Task_Management_System\\Net_Backend\\TaskManagement.API\\wwwroot\\uploads\\0a7d7653-ca8f-40da-9f26-46877125066b.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "238816"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 29 Jun 2025 06:07:12 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "zgnsbng2ge"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b.pdf"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw="
+        }
+      ]
+    }
+  ]
 }

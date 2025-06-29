@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
+import {
+  getAllProjects,
+  getAllUsers,
+  addProject,
+  updateProject,
+  deleteProject
+} from "../API/ProjectAPI";
 
 const statusOptions = ["Active", "Archived"];
 const dueStatusOptions = ["Overdue", "Done on time", "Done overdue"];
@@ -12,16 +18,29 @@ export default function ProjectManagement({ user }) {
   const [addingNew, setAddingNew] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
 
-  // ---- Load projects and users from backend on mount ----
   useEffect(() => {
-    axios
-      .get("http://localhost:5047/api/projects")
-      .then((res) => setProjects(res.data))
+    getAllProjects()
+      .then((allProjects) => {
+        let filtered;
+        if (isAdmin) {
+          filtered = allProjects;
+        } else if (isManager) {
+          filtered = allProjects.filter(
+            (p) =>
+              p.manager === user.username ||
+              ensureArray(p.members).includes(user.username)
+          );
+        } else if (isContributor) {
+          filtered = allProjects.filter((p) =>
+            ensureArray(p.members).includes(user.username)
+          );
+        }
+        setProjects(filtered);
+      })
       .catch((err) => alert("Failed to load projects: " + err));
 
-    axios
-      .get("http://localhost:5047/api/User")
-      .then((res) => setAllUsers(res.data))
+    getAllUsers()
+      .then(setAllUsers)
       .catch((err) => alert("Failed to load users: " + err));
   }, []);
 
@@ -41,21 +60,24 @@ export default function ProjectManagement({ user }) {
     }));
   };
 
-  // ---- Edit Project ----
+
   const handleEdit = (idx) => {
-    setEditIdx(idx);
-    // Ensure members and tasks are arrays
-    setEditProject({
-      ...projects[idx],
-      members: ensureArray(projects[idx].members),
-      tasks: ensureArray(projects[idx].tasks),
-    });
-    setAddingNew(false);
+    const project = projects[idx];
+
+    if (isAdmin || (isManager && project.manager === user.username)) {
+      setEditIdx(idx);
+      setEditProject({
+        ...project,
+        members: ensureArray(project.members),
+        tasks: ensureArray(project.tasks),
+      });
+      setAddingNew(false);
+    } else {
+      alert("You are not allowed to edit this project.");
+    }
   };
 
-  // ---- Add/Edit Save ----
   const handleSave = (idx) => {
-    // Prepare members/tasks as arrays for backend
     const payload = {
       ...editProject,
       members: editProject.members,
@@ -63,19 +85,14 @@ export default function ProjectManagement({ user }) {
     };
 
     if (addingNew) {
-      // Add new project
-      axios
-        .post("http://localhost:5047/api/projects", payload)
-        .then((res) => setProjects([...projects, res.data]))
+      addProject(payload)
+        .then((newProject) => setProjects([...projects, newProject]))
         .catch((err) => alert("Failed to add project: " + err));
       setAddingNew(false);
     } else {
-      // Update project
       const projectId = projects[editIdx].id;
-      axios
-        .put(`http://localhost:5047/api/projects/${projectId}`, payload)
+      updateProject(projectId, payload)
         .then(() => {
-          // Update local state
           const updated = projects.map((p, i) =>
             i === editIdx ? { ...editProject, id: projectId } : p
           );
@@ -93,11 +110,9 @@ export default function ProjectManagement({ user }) {
     setAddingNew(false);
   };
 
-  // ---- Delete ----
   const handleDelete = (idx) => {
     const projectId = projects[idx].id;
-    axios
-      .delete(`http://localhost:5047/api/projects/${projectId}`)
+    deleteProject(projectId)
       .then(() => setProjects(projects.filter((_, i) => i !== idx)))
       .catch((err) => alert("Failed to delete project: " + err));
   };
@@ -108,7 +123,7 @@ export default function ProjectManagement({ user }) {
       title: "",
       goals: "",
       status: statusOptions[0],
-      manager: "",
+      manager: isManager ? user.username : "",
       startDate: "",
       dueDate: "",
       dueStatus: dueStatusOptions[0],
@@ -117,7 +132,6 @@ export default function ProjectManagement({ user }) {
     });
   };
 
-  // Handle checkbox selection for members
   const handleMemberCheckboxChange = (e, username) => {
     const { checked } = e.target;
     setEditProject((prev) => {
@@ -131,7 +145,6 @@ export default function ProjectManagement({ user }) {
     });
   };
 
-  // Utility: Convert to array if not already (for backend responses)
   const ensureArray = (val) =>
     Array.isArray(val)
       ? val
@@ -139,7 +152,6 @@ export default function ProjectManagement({ user }) {
         ? val.split(",").map((v) => v.trim()).filter(Boolean)
         : [];
 
-  // Get all managers for dropdown
   const managerUsers = allUsers.filter(
     (u) =>
       u.role.toLowerCase() === "manager" ||
@@ -148,7 +160,15 @@ export default function ProjectManagement({ user }) {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Project Management</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {isAdmin
+          ? "Project Management"
+          : isManager
+          ? "My Projects"
+          : isContributor
+          ? "My Projects"
+          : "Project Management"}
+      </h1>
 
       {!isContributor && (
         <button
@@ -167,12 +187,12 @@ export default function ProjectManagement({ user }) {
               <th className="border px-4 py-2">Project Title</th>
               <th className="border px-4 py-2">Goals</th>
               <th className="border px-4 py-2">Status</th>
-              {isAdmin && <th className="border px-4 py-2">Assigned Manager</th>}
+              <th className="border px-4 py-2">Assigned Manager</th>
               <th className="border px-4 py-2">Timeline</th>
               <th className="border px-4 py-2">Due Status</th>
               <th className="border px-4 py-2">Project Members</th>
               <th className="border px-4 py-2">List of Tasks</th>
-              <th className="border px-4 py-2">Actions</th>
+              {(isAdmin || isManager) && <th className="border px-4 py-2">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -223,22 +243,31 @@ export default function ProjectManagement({ user }) {
                     project.status
                   )}
                 </td>
-                {isAdmin && (
+                {(isAdmin || isManager || isContributor) && (
                   <td className="border px-4 py-2">
                     {editIdx === idx ? (
-                      <select
-                        className="border px-2 py-1 rounded w-full"
-                        name="manager"
-                        value={editProject?.manager ?? ""}
-                        onChange={handleFormChange}
-                      >
-                        <option value="">Select Manager</option>
-                        {managerUsers.map((u) => (
-                          <option key={u.userId} value={u.username}>
-                            {u.username}
-                          </option>
-                        ))}
-                      </select>
+                      isAdmin ? (
+                        <select
+                          className="border px-2 py-1 rounded w-full"
+                          name="manager"
+                          value={editProject?.manager ?? ""}
+                          onChange={handleFormChange}
+                        >
+                          <option value="">Select Manager</option>
+                          {managerUsers.map((u) => (
+                            <option key={u.userId} value={u.username}>
+                              {u.username}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          className="border px-2 py-1 rounded w-full bg-gray-100"
+                          value={editProject?.manager ?? ""}
+                          disabled
+                        />
+                      )
                     ) : (
                       project.manager
                     )}
@@ -264,7 +293,7 @@ export default function ProjectManagement({ user }) {
                       />
                     </div>
                   ) : (
-                    `${project.startDate} - ${project.dueDate}`
+                    `${String(project.startDate).substring(0,10)} to ${String(project.dueDate).substring(0,10)}`
                   )}
                 </td>
                 <td className="border px-4 py-2">
@@ -285,22 +314,26 @@ export default function ProjectManagement({ user }) {
                 </td>
                 <td className="border px-4 py-2">
                   {editIdx === idx ? (
-                    <div className="max-h-40 overflow-y-auto">
-                      {allUsers.map((u) => (
-                        <div key={u.userId} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`member-${idx}-${u.userId}`}
-                            checked={editProject?.members?.includes(u.username) || false}
-                            onChange={(e) => handleMemberCheckboxChange(e, u.username)}
-                            className="mr-2"
-                          />
-                          <label htmlFor={`member-${idx}-${u.userId}`}>
-                            {u.username} ({u.role})
-                          </label>
-                        </div>
-                      ))}
-                    </div>
+                    isAdmin || (isManager && editProject.manager === user.username) ? (
+                      <div className="max-h-40 overflow-y-auto">
+                        {allUsers.map((u) => (
+                          <div key={u.userId} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`member-${idx}-${u.userId}`}
+                              checked={editProject?.members?.includes(u.username) || false}
+                              onChange={(e) => handleMemberCheckboxChange(e, u.username)}
+                              className="mr-2"
+                            />
+                            <label htmlFor={`member-${idx}-${u.userId}`}>
+                              {u.username} ({u.role})
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 italic">Editing not allowed</div>
+                    )
                   ) : (
                     <div className="max-h-30 overflow-y-auto">
                       <ul className="list-disc pl-4">
@@ -327,45 +360,48 @@ export default function ProjectManagement({ user }) {
                     </ul>
                   )}
                 </td>
-                <td className="border px-4 py-2">
-                  {(isAdmin || isManager) ? (
-                    <div className="flex gap-2">
-                      {editIdx === idx ? (
-                        <>
-                          <button
-                            className="bg-green-500 text-white px-2 py-1 rounded"
-                            onClick={() => handleSave(idx)}
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="bg-gray-400 text-white px-2 py-1 rounded"
-                            onClick={handleCancel}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            className="bg-yellow-400 px-2 py-1 rounded"
-                            onClick={() => handleEdit(idx)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="bg-red-500 text-white px-2 py-1 rounded"
-                            onClick={() => handleDelete(idx)}
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-gray-500">No actions</span>
-                  )}
-                </td>
+                {(isAdmin || isManager) && (
+                  <td className="border px-4 py-2">
+                    {(isAdmin || (isManager && project.manager === user.username)) ? (
+                      <div className="flex gap-2">
+                        {editIdx === idx ? (
+                          <>
+                            <button
+                              className="bg-green-500 text-white px-2 py-1 rounded"
+                              onClick={() => handleSave(idx)}
+                            >
+                              Save
+                            </button>
+                            <button
+                              className="bg-gray-400 text-white px-2 py-1 rounded"
+                              onClick={handleCancel}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="bg-yellow-400 px-2 py-1 rounded"
+                              onClick={() => handleEdit(idx)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="bg-red-500 text-white px-2 py-1 rounded"
+                              onClick={() => handleDelete(idx)}
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 italic">No action is allowed</div>
+                    )}
+                  </td>
+                )}
+              
               </tr>
             ))}
 
@@ -399,21 +435,30 @@ export default function ProjectManagement({ user }) {
                     ))}
                   </select>
                 </td>
-                {isAdmin && (
+                {(isAdmin || isManager) && (
                   <td className="border px-4 py-2">
-                    <select
-                      className="border px-2 py-1 rounded w-full"
-                      name="manager"
+                    {isAdmin ? (
+                      <select
+                        className="border px-2 py-1 rounded w-full"
+                        name="manager"
+                        value={editProject.manager}
+                        onChange={handleFormChange}
+                      >
+                        <option value="">Select Manager</option>
+                        {managerUsers.map((u) => (
+                          <option key={u.userId} value={u.username}>
+                            {u.username}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                    <input
+                      type="text"
+                      className="border px-2 py-1 rounded w-full bg-gray-100"
                       value={editProject.manager}
-                      onChange={handleFormChange}
-                    >
-                      <option value="">Select Manager</option>
-                      {managerUsers.map((u) => (
-                        <option key={u.userId} value={u.username}>
-                          {u.username}
-                        </option>
-                      ))}
-                    </select>
+                      disabled
+                    />
+                  )}
                   </td>
                 )}
                 <td className="border px-4 py-2">

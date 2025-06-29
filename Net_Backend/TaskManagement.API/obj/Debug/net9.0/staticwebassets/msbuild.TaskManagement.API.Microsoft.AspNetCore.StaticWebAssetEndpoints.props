@@ -1,0 +1,16 @@
+﻿<Project>
+  <ItemGroup>
+    <StaticWebAssetEndpoint Include="_content/TaskManagement.API/uploads/0a7d7653-ca8f-40da-9f26-46877125066b.pdf">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\0a7d7653-ca8f-40da-9f26-46877125066b.pdf'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"238816"},{"Name":"Content-Type","Value":"application/pdf"},{"Name":"ETag","Value":"\u002204wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw=\u0022"},{"Name":"Last-Modified","Value":"Sun, 29 Jun 2025 06:07:12 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/TaskManagement.API/uploads/0a7d7653-ca8f-40da-9f26-46877125066b.zgnsbng2ge.pdf">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\0a7d7653-ca8f-40da-9f26-46877125066b.pdf'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"zgnsbng2ge"},{"Name":"integrity","Value":"sha256-04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw="},{"Name":"label","Value":"_content/TaskManagement.API/uploads/0a7d7653-ca8f-40da-9f26-46877125066b.pdf"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"238816"},{"Name":"Content-Type","Value":"application/pdf"},{"Name":"ETag","Value":"\u002204wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw=\u0022"},{"Name":"Last-Modified","Value":"Sun, 29 Jun 2025 06:07:12 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+  </ItemGroup>
+</Project>

@@ -1,5 +1,88 @@
 {
   "Version": 1,
   "ManifestType": "Build",
-  "Endpoints": []
+  "Endpoints": [
+    {
+      "Route": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b.pdf",
+      "AssetFile": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "238816"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 29 Jun 2025 06:07:12 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b.zgnsbng2ge.pdf",
+      "AssetFile": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "238816"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 29 Jun 2025 06:07:12 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "zgnsbng2ge"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-04wol/5p9Dxaaqs8MYPpeT23aM0FVwNtFlQKGYFvbcw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/0a7d7653-ca8f-40da-9f26-46877125066b.pdf"
+        }
+      ]
+    }
+  ]
 }
