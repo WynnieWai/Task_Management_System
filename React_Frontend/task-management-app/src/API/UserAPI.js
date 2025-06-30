@@ -20,3 +20,11 @@ export const editUser = async (userId, updatedUser) => {
 export const deleteUser = async (userId) => {
   await axios.delete(`${API_URL}/${userId}`);
 };
+
+export const lockUser = async (userId) => {
+  await axios.put(`${API_URL}/lock/${userId}`);
+};
+
+export const unlockUser = async (userId) => {
+  await axios.put(`${API_URL}/unlock/${userId}`);
+};

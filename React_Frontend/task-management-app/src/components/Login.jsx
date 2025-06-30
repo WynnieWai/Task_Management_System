@@ -69,6 +69,25 @@ export default function Login({ setUser }) {
   //   }
   // };
 
+  // const handleSubmit = async e => {
+  //   e.preventDefault();
+  //   try {
+  //     const res = await axios.post("http://localhost:5047/api/User/login", {
+  //       username: form.username,
+  //       password: form.password,
+  //     });
+  //     // Normalize role for frontend
+  //     let user = res.data;
+  //     let role = user.role.toLowerCase();
+  //     if (role === "projectmanager") role = "manager";
+  //     if (role === "contributor") role = "contributor";
+  //     if (role === "admin") role = "admin";
+  //     setUser({ ...user, role });
+  //   } catch (err) {
+  //     setError("Invalid credentials");
+  //   }
+  // };
+
   const handleSubmit = async e => {
     e.preventDefault();
     try {
@@ -76,15 +95,21 @@ export default function Login({ setUser }) {
         username: form.username,
         password: form.password,
       });
-      // Normalize role for frontend
+
       let user = res.data;
       let role = user.role.toLowerCase();
       if (role === "projectmanager") role = "manager";
       if (role === "contributor") role = "contributor";
       if (role === "admin") role = "admin";
       setUser({ ...user, role });
+
     } catch (err) {
-      setError("Invalid credentials");
+      const message = err.response?.data?.message;
+      if (message === "Your account has been locked.") {
+        setError("Your account has been locked.");
+      } else {
+        setError("Invalid credentials");
+      }
     }
   };
 

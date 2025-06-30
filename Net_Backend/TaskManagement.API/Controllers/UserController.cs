@@ -32,7 +32,8 @@ namespace TaskManagement.API.Controllers
                     Id = user.Id,
                     UserId = user.UserId,
                     Username = user.Username,
-                    Role = user.Role
+                    Role = user.Role,
+                    Status = user.Status
                 });
             }
             return Ok(usersDto);
@@ -123,6 +124,9 @@ namespace TaskManagement.API.Controllers
             if (user.PasswordHash != loginDto.Password)
                 return Unauthorized(new { message = "Invalid username or password" });
 
+            if (user.Status == "Locked")
+                return Unauthorized(new { message = "Your account has been locked." });
+
             // Return user info (without password)
             return Ok(new
             {
@@ -169,6 +173,30 @@ namespace TaskManagement.API.Controllers
             _context.SaveChanges();
 
             return NoContent();
+        }
+
+        [HttpPut("lock/{userId:int}")]
+        public IActionResult LockUserById([FromRoute] int userId)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.UserId == userId);
+            if (user == null) return NotFound();
+
+            user.Status = "Locked";
+            _context.SaveChanges();
+
+            return Ok(new { message = $"User {user.Username} has been locked." });
+        }
+
+        [HttpPut("unlock/{userId:int}")]
+        public IActionResult UnlockUserById([FromRoute] int userId)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.UserId == userId);
+            if (user == null) return NotFound();
+
+            user.Status = "Active";
+            _context.SaveChanges();
+
+            return Ok(new { message = $"User {user.Username} has been unlocked." });
         }
     }
 }
