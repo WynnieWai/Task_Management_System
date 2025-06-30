@@ -1,10 +1,15 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Your custom CSS overrides below */
 :root {
   --primary-color: #0073ea;
   --secondary-color: #f5f7fa;
   --accent-color: #00c875;
-  --font-sans: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
+  --third-color: #9cb9d6;
+  /* --font-sans: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif; */
+  --font-sans: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 body {

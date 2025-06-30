@@ -15,12 +15,16 @@ import FilesSubmissions from "./components/FilesSubmissions";
 import CommentsDiscussion from "./components/CommentsDiscussion";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import { NotificationsProvider } from "./notifications/NotificationsContext";
+import Header from "./components/Header";
+import Profile from "./components/Profile";
 
 function App() {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
+    <NotificationsProvider>
     <Router>
       {user && (
         <Sidebar
@@ -35,6 +39,7 @@ function App() {
           user ? (sidebarOpen ? "ml-64" : "ml-16") : ""
         }`}
       >
+        {user && <Header user={user} />}
         <Routes>
           <Route
             path="/"
@@ -83,11 +88,37 @@ function App() {
             }
           />
 
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute user={user}>
+                <Notifications user={user} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teams"
+            element={
+              <ProtectedRoute user={user} roles={["admin", "manager", "contributor"]}>
+                <TeamManagement user={user} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute user={user}>
+                <Profile user={user} />
+              </ProtectedRoute>
+            }
+          />
+
           {/* ... other routes remain unchanged */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </Router>
+    </NotificationsProvider>
   );
 }
 
