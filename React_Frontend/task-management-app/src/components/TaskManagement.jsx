@@ -1201,38 +1201,55 @@
 //   );
 // }
 
+
 import React, { useState } from "react";
 import { MentionsInput, Mention } from "react-mentions";
 import { useNotifications } from "../notifications/NotificationsContext";
+import { CheckCircleIcon, ExclamationCircleIcon, MinusCircleIcon, InformationCircleIcon, DocumentTextIcon } from '@heroicons/react/24/solid';
+import { ClipboardDocumentIcon } from '@heroicons/react/24/solid';
+import { ClockIcon, EllipsisHorizontalCircleIcon } from '@heroicons/react/24/solid';
+import { FaceSmileIcon, AtSymbolIcon } from '@heroicons/react/24/solid';
+import { PaperClipIcon } from '@heroicons/react/24/solid';
+import { ChatBubbleLeftEllipsisIcon, ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/solid';
+
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css'; 
+import 'tippy.js/themes/light.css'; 
+import Picker from '@emoji-mart/react';
+import data from '@emoji-mart/data';
+
+import { useEffect } from "react";
 
 const initialTasks = [
   {
     title: "Design Login UI",
-    description: "Create login page wireframe and UI components.",
+    description: "Create login page wireframe and UI components Create login page wireframe and UI components Create login page wireframe and UI components.",
     members: ["Alice", "Bob"],
-    startDate: "2025-06-28",
-    dueDate: "2025-07-02",
-    dueStatus: "Done on time",
+    startDate: "2025-06-12",
+    dueDate: "2025-06-27",
+    dueStatus: "Overdue",
     priority: "High",
     status: "In Progress",
-    file: "loginUI.png",
+    fileAttachment: "designSpec.pdf",
+    fileSubmission: "loginUI.png",
   },
   {
     title: "Setup Auth Backend",
     description: "Implement JWT auth and DB connection.",
     members: ["Charlie"],
     startDate: "2025-06-28",
-    dueDate: "2025-07-02",
-    dueStatus: "Overdue",
+    dueDate: "2025-07-12",
+    dueStatus: "On Track",
     priority: "Medium",
     status: "To-Do",
-    file: "authAPI.js",
+    fileAttachment: "",
+    fileSubmission: "",
   },
 ];
 
 const priorityOptions = ["High", "Medium", "Low"];
 const statusOptions = ["To-Do", "In Progress", "Done"];
-const dueStatusOptions = ["Done on time", "Overdue", "Done overdue"];
+const dueStatusOptions = ["On track", "Overdue", "Done on time", "Done overdue"];
 
 const usersList = [
   { id: "admin", display: "admin" },
@@ -1249,6 +1266,15 @@ export default function TaskManagement() {
   const [comments, setComments] = useState({});
   const [mentionInput, setMentionInput] = useState("");
   const { addNotification } = useNotifications();
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [commentFile, setCommentFile] = useState(null);
+
+  // Side panel states
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [currentCommentTaskIdx, setCurrentCommentTaskIdx] = useState(null);
+
+  const [selectedTasks, setSelectedTasks] = useState([]);
+  const selectedAllTasks = selectedTasks.length === tasks.length;
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -1270,10 +1296,17 @@ export default function TaskManagement() {
 
   const handleSave = (idx) => {
     if (addingNew) {
-      setTasks([...tasks, editTask]);
+      setTasks([
+        ...tasks,
+        { ...editTask, dueStatus: calculateDueStatus(editTask) }
+      ]);
       setAddingNew(false);
     } else {
-      const updated = tasks.map((t, i) => (i === idx ? editTask : t));
+      const updated = tasks.map((t, i) =>
+        i === idx
+          ? { ...editTask, dueStatus: calculateDueStatus(editTask) }
+          : t
+      );
       setTasks(updated);
     }
     setEditIdx(null);
@@ -1305,37 +1338,40 @@ export default function TaskManagement() {
     });
   };
 
-  const handleFileChange = (e) => {
+  const handleFileAttachmentChange = (e) => {
     setEditTask((prev) => ({
       ...prev,
-      file: e.target.files[0]?.name || "",
+      fileAttachment: e.target.files[0]?.name || "",
     }));
   };
 
-  // const handleAddComment = (taskIdx) => {
-  //   if (!mentionInput) return;
-
-  //   setComments((prev) => ({
-  //     ...prev,
-  //     [taskIdx]: [...(prev[taskIdx] || []), mentionInput],
-  //   }));
-
-  //   setMentionInput("");
-  // };
+  const handleFileSubmissionChange = (e) => {
+    setEditTask((prev) => ({
+      ...prev,
+      fileSubmission: e.target.files[0]?.name || "",
+    }));
+  };
 
   const handleAddComment = (taskIdx) => {
-    if (!mentionInput) return;
+    if (!mentionInput && !commentFile) return;
 
     const mentionsRegex = /@(\w+)/g;
     const mentionedUsers = [];
     let match;
     while ((match = mentionsRegex.exec(mentionInput)) !== null) {
-      mentionedUsers.push(match[1]);
+      const userId = match[1];
+      mentionedUsers.push(userId);
     }
 
     setComments((prev) => ({
       ...prev,
-      [taskIdx]: [...(prev[taskIdx] || []), mentionInput],
+      [taskIdx]: [
+        ...(prev[taskIdx] || []),
+        {
+          text: mentionInput,
+          file: commentFile
+        }
+      ],
     }));
 
     mentionedUsers.forEach(user => {
@@ -1348,332 +1384,694 @@ export default function TaskManagement() {
     });
 
     setMentionInput("");
+    setCommentFile(null);
   };
 
+  const openCommentsPanel = (idx) => {
+    setCurrentCommentTaskIdx(idx);
+    setShowCommentsPanel(true);
+  };
+
+  const closeCommentsPanel = () => {
+    setShowCommentsPanel(false);
+    setCurrentCommentTaskIdx(null);
+  };
+
+  const handleSelectTask = (idx) => {
+    setSelectedTasks((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const handleSelectAllTasks = () => {
+    if (selectedAllTasks) {
+      setSelectedTasks([]);
+    } else {
+      setSelectedTasks(tasks.map((_, i) => i));
+    }
+  };
+
+  const handleBulkDeleteTasks = () => {
+    const updated = tasks.filter((_, idx) => !selectedTasks.includes(idx));
+    setTasks(updated);
+    setSelectedTasks([]);
+  };
+
+  const handleBulkEditTasks = () => {
+    if (selectedTasks.length === 1) {
+      const idx = selectedTasks[0];
+      setEditIdx(idx);
+      setEditTask({ ...tasks[idx] });
+      setAddingNew(false);
+    } else {
+      alert("Please select only one task to edit at a time.");
+    }
+  };
+
+  const handleBulkMarkAsDone = () => {
+    const today = new Date().toISOString().split("T")[0];
+    setTasks(prevTasks =>
+      prevTasks.map((task, i) =>
+        selectedTasks.includes(i)
+          ? {
+              ...task,
+              status: "Done",
+              completedDate: today,
+              dueStatus: calculateDueStatus({ ...task, status: "Done", completedDate: today })
+            }
+          : task
+      )
+    );
+    setSelectedTasks([]); // clear selection after marking as done
+  };
+
+  const handleBulkSaveTasks = () => {
+    console.log("Tasks saved:", tasks);
+    alert("Changes have been saved successfully!");
+    setSelectedTasks([]);
+    setEditIdx(null);
+    setEditTask(null);
+    setAddingNew(false);
+  };
+
+  const calculateDueStatus = (task) => {
+    const today = new Date().toISOString().split("T")[0];
+    if (task.status !== "Done") {
+      // If not done yet, check if overdue
+      return today > task.dueDate ? "Overdue" : "On track";
+    } else {
+      // If done, check if done on time
+      return task.completedDate && task.completedDate <= task.dueDate
+        ? "Done on time"
+        : "Done overdue";
+    }
+  };
+
+  useEffect(() => {
+    setTasks(prevTasks =>
+      prevTasks.map(task => ({
+        ...task,
+        dueStatus: calculateDueStatus(task)
+      }))
+    );
+  }, []);
+
+  const renderDueStatusBadge = (task) => {
+    const today = new Date().toISOString().split("T")[0];
+    let content, color, Icon;
+
+    if (task.status !== "Done") {
+      if (today <= task.dueDate) {
+        content = "On track";
+        color = "bg-blue-100 text-blue-800";
+        Icon = InformationCircleIcon;
+      } else {
+        content = "Overdue";
+        color = "bg-red-100 text-red-800";
+        Icon = ExclamationCircleIcon;
+      }
+    } else {
+      if (task.completedDate <= task.dueDate) {
+        content = "Done on time";
+        color = "bg-green-100 text-green-800";
+        Icon = CheckCircleIcon;
+      } else {
+        content = "Done overdue";
+        color = "bg-red-100 text-red-800";
+        Icon = MinusCircleIcon;
+      }
+    }
+
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${color}`}>
+        <Icon className="h-4 w-4" />
+        {content}
+      </span>
+    );
+  };
+
+  const handleMarkAsDone = (idx) => {
+    const today = new Date().toISOString().split("T")[0];
+    setTasks(prevTasks =>
+      prevTasks.map((task, i) =>
+        i === idx
+          ? {
+              ...task,
+              status: "Done",
+              completedDate: today,
+              dueStatus: calculateDueStatus({ ...task, status: "Done", completedDate: today })
+            }
+          : task
+      )
+    );
+  };
+
+  const renderPriorityBadge = (priority) => {
+    let colorClasses = "";
+
+    switch(priority) {
+      case "High":
+        colorClasses = "bg-red-700 text-white";
+        break;
+      case "Medium":
+        colorClasses = "bg-orange-500 text-white";
+        break;
+      case "Low":
+        colorClasses = "bg-blue-400 text-white";
+        break;
+      default:
+        colorClasses = "bg-gray-200 text-gray-800";
+    }
+
+    return (
+      <span className={`inline-block px-3 py-1 rounded-full text-xs font-normal ${colorClasses}`}>
+        {priority}
+      </span>
+    );
+  };
+
+  const renderStatusBadge = (status) => {
+    let bgColor, textColor, Icon;
+
+    if (status === "To-Do") {
+      bgColor = "bg-gray-200";
+      textColor = "text-gray-800";
+      Icon = EllipsisHorizontalCircleIcon;
+    } else if (status === "In Progress") {
+      bgColor = "bg-yellow-100";
+      textColor = "text-yellow-800";
+      Icon = ClockIcon;
+    } else { // Done
+      bgColor = "bg-green-100";
+      textColor = "text-green-800";
+      Icon = CheckCircleIcon;
+    }
+
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
+        <Icon className="h-4 w-4" />
+        {status}
+      </span>
+    );
+  };
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Task Management</h1>
+      <h1 className="text-3xl font-bold mb-6">Task Management</h1>
       <button
-        className="mb-4 bg-blue-600 text-white px-4 py-2 rounded"
+        className="mb-8 bg-mycustomblue text-white font-medium px-4 py-2 rounded"
         onClick={handleAddNew}
       >
         Create New Task
       </button>
 
+      {selectedTasks.length > 0 && (
+        <div className="bg-white border rounded mb-2 px-4 py-2 flex items-center justify-between shadow-sm">
+          <span className="text-xs text-gray-800">SELECTED: {selectedTasks.length}</span>
+          <div className="flex gap-2">
+            <button
+              onClick={handleBulkEditTasks}
+              className="bg-white hover:bg-gray-200 px-3 py-1 rounded shadow-sm hover:shadow text-gray-800 text-xs"
+            >
+              EDIT
+            </button>
+            <button
+              onClick={handleBulkMarkAsDone}
+              className="bg-white hover:bg-gray-200 px-3 py-1 rounded shadow-sm hover:shadow text-gray-800 text-xs"
+            >
+              MARK AS DONE
+            </button>
+            <button
+              onClick={handleBulkDeleteTasks}
+              className="bg-white hover:bg-gray-200 px-3 py-1 rounded shadow-sm hover:shadow text-gray-800 text-xs"
+            >
+              DELETE
+            </button>
+            <button
+              onClick={handleBulkSaveTasks}
+              className="bg-white hover:bg-green-200 text-gray-800 px-3 py-1 rounded shadow-sm hover:shadow text-xs"
+            >
+              SAVE
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto w-full">
         <table className="min-w-[1600px] bg-white border whitespace-nowrap">
           <thead>
             <tr>
-              <th className="border px-4 py-2">Task Title</th>
-              <th className="border px-4 py-2">Description</th>
-              <th className="border px-4 py-2">Assigned Members</th>
-              <th className="border px-4 py-2">Timeline</th>
-              <th className="border px-4 py-2">Due Date Status</th>
-              <th className="border px-4 py-2">Priority</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">File Attachments</th>
-              <th className="border px-4 py-2">Actions</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={selectedAllTasks}
+                  onChange={handleSelectAllTasks}
+                />
+              </th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">ID</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">Task Title</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">Description</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">Status</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">Priority</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">Assigned Members</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">Timeline</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">Due Status</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">File Attachment</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">File Submission</th>
+              <th className="border px-4 py-2 text-left text-sm font-semibold">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {tasks.map((task, idx) => (
-              <React.Fragment key={idx}>
-                <tr>
-                  <td className="border px-4 py-2">
+              <tr key={idx} className={selectedTasks.includes(idx) ? "bg-green-50" : ""}>
+                <td className="border px-4 py-2 text-sm font-normal">
+                  <input
+                    type="checkbox"
+                    checked={selectedTasks.includes(idx)}
+                    onChange={() => handleSelectTask(idx)}
+                  />
+                </td>
+                {/* ID cell */}
+                <td className="border px-4 py-2 text-sm font-normal">{idx + 1}</td>
+                {/* Task Title */}
+                <td className="border px-4 py-2 text-sm font-normal">
+                  <div className="flex items-center gap-2">
+                    <ClipboardDocumentIcon className="h-5 w-5 text-blue-500" />
                     {editIdx === idx ? (
                       <input
                         name="title"
-                        value={editTask?.title || ""} // add optional chaining
+                        value={editTask.title}
                         onChange={handleFormChange}
                         className="border px-2 py-1 rounded w-full"
                       />
                     ) : (
                       task.title
                     )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editIdx === idx ? (
-                      <input
-                        name="description"
-                        value={editTask.description}
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
-                      />
-                    ) : (
-                      task.description
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editIdx === idx ? (
-                      <input
-                        name="members"
-                        value={editTask.members.join(", ")}
-                        onChange={handleEditMembers}
-                        className="border px-2 py-1 rounded w-full"
-                      />
-                    ) : (
-                      <ul className="list-disc pl-4">
-                        {task.members.map((m) => (
-                          <li key={m}>{m}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editIdx === idx ? (
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          name="startDate"
-                          value={editTask.startDate}
-                          onChange={handleFormChange}
-                          className="border px-2 py-1 rounded"
-                        />
-                        <span>-</span>
-                        <input
-                          type="date"
-                          name="dueDate"
-                          value={editTask.dueDate}
-                          onChange={handleFormChange}
-                          className="border px-2 py-1 rounded"
-                        />
-                      </div>
-                    ) : (
-                      `${task.startDate} to ${task.dueDate}`
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editIdx === idx ? (
-                      <select
-                        name="dueStatus"
-                        value={editTask.dueStatus}
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
-                      >
-                        {dueStatusOptions.map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      task.dueStatus
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editIdx === idx ? (
-                      <select
-                        name="priority"
-                        value={editTask.priority}
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
-                      >
-                        {priorityOptions.map((p) => (
-                          <option key={p} value={p}>{p}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      task.priority
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editIdx === idx ? (
-                      <select
-                        name="status"
-                        value={editTask.status}
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
-                      >
-                        {statusOptions.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      task.status
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editIdx === idx ? (
-                      <input type="file" onChange={handleFileChange} />
-                    ) : (
-                      task.file
-                    )}
-                  </td>
-                  <td className="border px-4 py-2">
-                    {editIdx === idx ? (
-                      <div className="flex gap-2">
-                        <button
-                          className="bg-green-500 text-white px-2 py-1 rounded"
-                          onClick={() => handleSave(idx)}
-                        >
-                          Save
-                        </button>
-                        <button
-                          className="bg-gray-400 text-white px-2 py-1 rounded"
-                          onClick={handleCancel}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <button
-                          className="bg-yellow-400 px-2 py-1 rounded"
-                          onClick={() => handleEdit(idx)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="bg-red-500 text-white px-2 py-1 rounded"
-                          onClick={() => handleDelete(idx)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-
-                {/* Comments Row */}
-                <tr>
-                  <td colSpan="9" className="border px-4 py-2 bg-gray-50">
-                    <h3 className="font-semibold mb-2">Comments:</h3>
-                    <div className="mb-2">
-                      {(comments[idx] || []).map((comment, ci) => (
-                        <div key={ci} className="p-2 bg-white rounded shadow mb-1">
-                          {comment}
-                        </div>
+                  </div>
+                </td>
+                {/* Description */}
+                <td className="border px-4 py-2 text-sm font-normal">
+                  {editIdx === idx ? (
+                    <input
+                      name="description"
+                      value={editTask.description}
+                      onChange={handleFormChange}
+                      className="border px-2 py-1 rounded w-full"
+                    />
+                  ) : (
+                    <Tippy content={<span>{task.description}</span>} theme="light" placement="top" maxWidth="300px" className="p-2">
+                      <span className="block max-w-xs truncate cursor-pointer">
+                        {task.description}
+                      </span>
+                    </Tippy>
+                  )}
+                </td>
+                {/* Status */}
+                <td className="border px-4 py-2 text-sm font-normal">
+                  {editIdx === idx ? (
+                    <select
+                      name="status"
+                      value={editTask.status}
+                      onChange={handleFormChange}
+                      className="border px-2 py-1 rounded w-full"
+                    >
+                      {statusOptions.map((s) => (
+                        <option key={s} value={s}>{s}</option>
                       ))}
-                    </div>
-
-                    <MentionsInput
-                      value={mentionInput}
-                      onChange={(e) => setMentionInput(e.target.value)}
-                      className="border rounded p-2 w-full"
-                      placeholder="Type comment and mention using @..."
+                    </select>
+                  ) : (
+                    renderStatusBadge(task.status)
+                  )}
+                </td>
+                {/* Priority */}
+                <td className="border px-4 py-2 text-sm font-normal">
+                  {editIdx === idx ? (
+                    <select
+                      name="priority"
+                      value={editTask.priority}
+                      onChange={handleFormChange}
+                      className="border px-2 py-1 rounded w-full"
                     >
-                      <Mention
-                        trigger="@"
-                        data={usersList}
-                        className="bg-blue-200"
-                      />
-                    </MentionsInput>
-
-                    <button
-                      className="mt-2 bg-blue-600 text-white px-4 py-1 rounded"
-                      onClick={() => handleAddComment(idx)}
-                    >
-                      Add Comment
-                    </button>
-                  </td>
-                </tr>
-              </React.Fragment>
-            ))}
-
-            {addingNew && (
-                <tr>
-                    <td className="border px-4 py-2">
+                      {priorityOptions.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    renderPriorityBadge(task.priority)
+                  )}
+                </td>
+                {/* Assigned Members */}
+                <td className="border px-4 py-2 text-sm font-normal">
+                  {editIdx === idx ? (
                     <input
-                        name="title"
-                        value={editTask?.title || ""} // add optional chaining
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
+                      name="members"
+                      value={editTask.members.join(", ")}
+                      onChange={handleEditMembers}
+                      className="border px-2 py-1 rounded w-full"
                     />
-                    </td>
-                    <td className="border px-4 py-2">
-                    <input
-                        name="description"
-                        value={editTask.description}
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
-                    />
-                    </td>
-                    <td className="border px-4 py-2">
-                    <input
-                        name="members"
-                        value={editTask.members.join(", ")}
-                        onChange={handleEditMembers}
-                        className="border px-2 py-1 rounded w-full"
-                    />
-                    </td>
-                    <td className="border px-4 py-2">
+                  ) : (
+                    <ul className="list-disc pl-4">
+                      {task.members.map((m) => (
+                        <li key={m}>{m}</li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
+                {/* Timeline */}
+                <td className="border px-4 py-2 text-sm font-normal">
+                  {editIdx === idx ? (
                     <div className="flex gap-2">
-                        <input
+                      <input
                         type="date"
                         name="startDate"
                         value={editTask.startDate}
                         onChange={handleFormChange}
                         className="border px-2 py-1 rounded"
-                        />
-                        <span>-</span>
-                        <input
+                      />
+                      <span>-</span>
+                      <input
                         type="date"
                         name="dueDate"
                         value={editTask.dueDate}
                         onChange={handleFormChange}
                         className="border px-2 py-1 rounded"
-                        />
+                      />
                     </div>
-                    </td>
-                    <td className="border px-4 py-2">
-                    <select
-                        name="dueStatus"
-                        value={editTask.dueStatus}
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
-                    >
-                        {dueStatusOptions.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                        ))}
-                    </select>
-                    </td>
-                    <td className="border px-4 py-2">
-                    <select
-                        name="priority"
-                        value={editTask.priority}
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
-                    >
-                        {priorityOptions.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                        ))}
-                    </select>
-                    </td>
-                    <td className="border px-4 py-2">
-                    <select
-                        name="status"
-                        value={editTask.status}
-                        onChange={handleFormChange}
-                        className="border px-2 py-1 rounded w-full"
-                    >
-                        {statusOptions.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                        ))}
-                    </select>
-                    </td>
-                    <td className="border px-4 py-2">
-                    <input type="file" onChange={handleFileChange} />
-                    </td>
-                    <td className="border px-4 py-2">
+                  ) : (
+                    `${task.startDate} - ${task.dueDate}`
+                  )}
+                </td>
+                {/* Due Status */}
+                <td className="border px-4 py-2 text-sm font-normal">
+                  {renderDueStatusBadge(task)}
+                </td>       
+                {/* File Attachment */}
+                <td className="border px-4 py-2 text-sm font-normal text-center">
+                  {editIdx === idx ? (
+                    <input type="file" onChange={handleFileAttachmentChange} />
+                  ) : (
+                    task.fileAttachment && (
+                      <a
+                        href={`/uploads/attachments/${task.fileAttachment}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <DocumentTextIcon Icon className="h-5 w-5 text-blue-500 inline-block" />
+                      </a>
+                    )
+                  )}
+                </td>
+                {/* File Submission */}
+                <td className="border px-4 py-2 text-sm font-normal text-center">
+                  {editIdx === idx ? (
+                    <input type="file" onChange={handleFileSubmissionChange} />
+                  ) : (
+                    task.fileSubmission && (
+                      <a
+                        href={`/uploads/submissions/${task.fileSubmission}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <DocumentTextIcon Icon className="h-5 w-5 text-black-500 inline-block" />
+                      </a>
+                    )
+                  )}
+                </td>
+                {/* Actions */}
+                <td className="border px-4 py-2 text-xs font-medium">
+                  {editIdx === idx ? (
                     <div className="flex gap-2">
-                        <button
+                      <button
                         className="bg-green-500 text-white px-2 py-1 rounded"
-                        onClick={() => handleSave(tasks.length)}
-                        >
-                        Add
-                        </button>
-                        <button
+                        onClick={() => handleSave(idx)}
+                      >
+                        SAVE
+                      </button>
+                      <button
                         className="bg-gray-400 text-white px-2 py-1 rounded"
                         onClick={handleCancel}
-                        >
-                        Cancel
-                        </button>
+                      >
+                        CANCEL
+                      </button>
                     </div>
-                    </td>
-                </tr>
-                )}
+                  ) : (
+                    <div className="flex gap-2 text-xs font-medium">
+                      <button
+                        className="bg-gray-200 text-gray-800 px-2 py-1 rounded"
+                        onClick={() => openCommentsPanel(idx)}
+                      >
+                        <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        className="bg-yellow-400 px-2 py-1 rounded"
+                        onClick={() => handleEdit(idx)}
+                      >
+                        EDIT
+                      </button>
+                      <button
+                        className="bg-red-500 text-white px-2 py-1 rounded"
+                        onClick={() => handleDelete(idx)}
+                      >
+                        DELETE
+                      </button>
+                      <button
+                        className="bg-blue-500 text-white px-2 py-1 rounded"
+                        onClick={() => handleMarkAsDone(idx)}
+                      >
+                        MARK AS DONE
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+
+            {addingNew && (
+              <tr className="bg-yellow-50">
+                <td className="border px-4 py-2 text-sm font-normal"></td>
+                <td className="border px-4 py-2 text-sm font-normal">{tasks.length + 1}</td>
+                <td className="border px-4 py-2 text-sm font-normal">
+                  <input
+                    name="title"
+                    value={editTask.title}
+                    onChange={handleFormChange}
+                    className="border px-2 py-1 rounded w-full"
+                  />
+                </td>
+                <td className="border px-4 py-2 text-sm font-normal">
+                  <input
+                    name="description"
+                    value={editTask.description}
+                    onChange={handleFormChange}
+                    className="border px-2 py-1 rounded w-full"
+                  />
+                </td>
+                <td className="border px-4 py-2 text-sm font-normal">
+                  <select
+                    name="status"
+                    value={editTask.status}
+                    onChange={handleFormChange}
+                    className="border px-2 py-1 rounded w-full"
+                  >
+                    {statusOptions.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="border px-4 py-2 text-sm font-normal">
+                  <select
+                    name="priority"
+                    value={editTask.priority}
+                    onChange={handleFormChange}
+                    className="border px-2 py-1 rounded w-full"
+                  >
+                    {priorityOptions.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="border px-4 py-2 text-sm font-normal">
+                  <input
+                    name="members"
+                    value={editTask.members.join(", ")}
+                    onChange={handleEditMembers}
+                    className="border px-2 py-1 rounded w-full"
+                  />
+                </td>
+                <td className="border px-4 py-2 text-sm font-normal">
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={editTask.startDate}
+                      onChange={handleFormChange}
+                      className="border px-2 py-1 rounded"
+                    />
+                    <span>-</span>
+                    <input
+                      type="date"
+                      name="dueDate"
+                      value={editTask.dueDate}
+                      onChange={handleFormChange}
+                      className="border px-2 py-1 rounded"
+                    />
+                  </div>
+                </td>
+                <td className="border px-4 py-2 text-sm font-normal">
+                  {/* Due status can be calculated after saving */}
+                </td>
+                <td className="border px-4 py-2 text-sm font-normal text-center">
+                  <input type="file" onChange={handleFileAttachmentChange} />
+                </td>
+                <td className="border px-4 py-2 text-sm font-normal text-center">
+                  <input type="file" onChange={handleFileSubmissionChange} />
+                </td>
+                <td className="border px-4 py-2 text-xs font-medium">
+                  <div className="flex gap-2">
+                    <button
+                      className="bg-green-500 text-white px-2 py-1 rounded"
+                      onClick={() => handleSave(null)} // null indicates new task
+                    >
+                      SAVE
+                    </button>
+                    <button
+                      className="bg-gray-400 text-white px-2 py-1 rounded"
+                      onClick={handleCancel}
+                    >
+                      CANCEL
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+
+      {/* Side Comments Panel */}
+      {showCommentsPanel && (
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={closeCommentsPanel}
+          ></div>
+
+          <div className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-lg z-50 overflow-y-auto">
+            <div className="flex justify-between items-center border-b px-6 py-3">
+              {/* Task Title */}
+              <h2 className="text-lg font-extrabold">
+                {tasks[currentCommentTaskIdx]?.title}
+              </h2>
+              <button onClick={closeCommentsPanel} className="text-gray-600 text-2xl font-extrabold">×</button>
+            </div>
+
+            <div className="border-t p-6">
+              {/* Add Comment Section */}
+              <div className="mb-8 relative">
+                <MentionsInput
+                  value={mentionInput}
+                  onChange={(e) => setMentionInput(e.target.value)}
+                  className="border rounded p-2 w-full min-h-[80px]"
+                  placeholder="Add Comment..."
+                  style={{
+                    control: {
+                      padding: "8px", // apply to the input control
+                      fontSize: 14
+                    },
+                    highlighter: {
+                      padding: "8px" // also pad highlighted text area
+                    },
+                    input: {
+                      padding: "8px" // ensure input text has padding
+                    }
+                  }}
+                >
+                  <Mention trigger="@" data={usersList} className="bg-blue-200" />
+                </MentionsInput>
+
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="text-gray-600 hover:text-gray-800"
+                    >
+                      <FaceSmileIcon className="h-5 w-5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setMentionInput(prev => prev + '@')}
+                      className="text-gray-600 hover:text-gray-800"
+                    >
+                      <AtSymbolIcon className="h-5 w-5" />
+                    </button>
+
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => setCommentFile(e.target.files[0])}
+                      />
+                      <PaperClipIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
+                    </label>
+                  </div>
+
+                  <button
+                    className="bg-mycustomblue text-white px-4 py-1 rounded text-sm"
+                    onClick={() => {
+                      handleAddComment(currentCommentTaskIdx);
+                      setShowEmojiPicker(false);
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
+
+                {showEmojiPicker && (
+                  <div className="absolute z-50 mt-2">
+                    <Picker
+                      data={data}
+                      onEmojiSelect={(emoji) => setMentionInput(prev => prev + emoji.native)}
+                      theme="light"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Published comments */}
+              {(comments[currentCommentTaskIdx] || []).map((comment, ci) => (
+                <div key={ci} className="flex items-start gap-2 mb-4">
+                  <div className="flex-shrink-0">
+                    <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-gray-700">
+                      U
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Username • 3 minutes ago</div>
+                    <div className="bg-gray-100 rounded px-3 py-2 text-sm">
+                      <p>{comment.text}</p>
+                      {comment.file && (
+                        <div className="mt-2">
+                          <a
+                            href={URL.createObjectURL(comment.file)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline"
+                          >
+                            {comment.file.name}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
