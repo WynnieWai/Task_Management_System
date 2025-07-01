@@ -1202,85 +1202,147 @@
 // }
 
 
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  getTasksByProject,
+  addTask,
+  updateTask,
+  deleteTask,
+  uploadTaskFile
+} from "../API/TaskAPI";
 import { MentionsInput, Mention } from "react-mentions";
 import { useNotifications } from "../notifications/NotificationsContext";
-import { CheckCircleIcon, ExclamationCircleIcon, MinusCircleIcon, InformationCircleIcon, DocumentTextIcon } from '@heroicons/react/24/solid';
-import { ClipboardDocumentIcon } from '@heroicons/react/24/solid';
-import { ClockIcon, EllipsisHorizontalCircleIcon } from '@heroicons/react/24/solid';
-import { FaceSmileIcon, AtSymbolIcon } from '@heroicons/react/24/solid';
-import { PaperClipIcon } from '@heroicons/react/24/solid';
-import { ChatBubbleLeftEllipsisIcon, ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/solid';
-
+import {
+  CheckCircleIcon, ExclamationCircleIcon, MinusCircleIcon, InformationCircleIcon,
+  DocumentTextIcon, ClipboardDocumentIcon, ClockIcon, EllipsisHorizontalCircleIcon,
+  FaceSmileIcon, AtSymbolIcon, PaperClipIcon, ChatBubbleOvalLeftEllipsisIcon
+} from '@heroicons/react/24/solid';
 import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css'; 
-import 'tippy.js/themes/light.css'; 
+import 'tippy.js/dist/tippy.css';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
-
-import { useEffect } from "react";
-
-const initialTasks = [
-  {
-    title: "Design Login UI",
-    description: "Create login page wireframe and UI components Create login page wireframe and UI components Create login page wireframe and UI components.",
-    members: ["Alice", "Bob"],
-    startDate: "2025-06-12",
-    dueDate: "2025-06-27",
-    dueStatus: "Overdue",
-    priority: "High",
-    status: "In Progress",
-    fileAttachment: "designSpec.pdf",
-    fileSubmission: "loginUI.png",
-  },
-  {
-    title: "Setup Auth Backend",
-    description: "Implement JWT auth and DB connection.",
-    members: ["Charlie"],
-    startDate: "2025-06-28",
-    dueDate: "2025-07-12",
-    dueStatus: "On Track",
-    priority: "Medium",
-    status: "To-Do",
-    fileAttachment: "",
-    fileSubmission: "",
-  },
-];
+import { ChevronRightIcon } from '@heroicons/react/24/solid';
+import axios from "axios";
+import { getCommentsByTaskId, addComment } from "../API/CommentsAPI";
 
 const priorityOptions = ["High", "Medium", "Low"];
 const statusOptions = ["To-Do", "In Progress", "Done"];
 const dueStatusOptions = ["On track", "Overdue", "Done on time", "Done overdue"];
-
 const usersList = [
   { id: "admin", display: "admin" },
   { id: "manager", display: "manager" },
   { id: "student", display: "student" },
 ];
 
-export default function TaskManagement() {
-  const [tasks, setTasks] = useState(initialTasks);
+export default function TaskManagement({ user }) {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+  const { addNotification } = useNotifications();
+
+  // Role helpers
+  const isAdmin = user?.role?.toLowerCase() === "admin";
+  const isManager = user?.role?.toLowerCase() === "manager";
+  const canEdit = isAdmin || isManager;
+
+  const [tasks, setTasks] = useState([]);
   const [editIdx, setEditIdx] = useState(null);
   const [editTask, setEditTask] = useState(null);
   const [addingNew, setAddingNew] = useState(false);
 
-  const [comments, setComments] = useState({});
-  const [mentionInput, setMentionInput] = useState("");
-  const { addNotification } = useNotifications();
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [commentFile, setCommentFile] = useState(null);
-
-  // Side panel states
-  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
-  const [currentCommentTaskIdx, setCurrentCommentTaskIdx] = useState(null);
-
+  // --- Bulk selection logic
   const [selectedTasks, setSelectedTasks] = useState([]);
   const selectedAllTasks = selectedTasks.length === tasks.length;
 
+  // --- File Modal logic
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [modalFile, setModalFile] = useState("");
+  const [modalFileObj, setModalFileObj] = useState(null);
+  const [fileType, setFileType] = useState(""); // "attachment" or "submission"
+  const [modalIdx, setModalIdx] = useState(null);
+
+  // --- File native input logic
+  const [attachmentFileObj, setAttachmentFileObj] = useState(null);
+
+  // --- Comments
+  //const [comments, setComments] = useState({});
+  const [comments, setComments] = useState([]);
+  const [mentionInputs, setMentionInputs] = useState({});
+  const [showEmojiPickers, setShowEmojiPickers] = useState({});
+  const [commentFiles, setCommentFiles] = useState({});
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [currentCommentTaskIdx, setCurrentCommentTaskIdx] = useState(null);
+
+  // --- Load tasks from backend ---
+  useEffect(() => {
+    if (!projectId) return;
+    getTasksByProject(projectId)
+      .then((res) => setTasks(res.data))
+      .catch((err) => alert("Failed to load tasks: " + (err?.response?.data || err)));
+  }, [projectId]);
+
+  //Comment
+  useEffect(() => {
+  if (showCommentsPanel && currentCommentTaskIdx !== null) {
+    const taskId = tasks[currentCommentTaskIdx]?.id;
+    if (taskId) {
+      getCommentsByTaskId(taskId)
+        .then(res => setComments(res.data))
+        .catch(() => setComments([]));
+    }
+  }
+}, [showCommentsPanel, currentCommentTaskIdx, tasks]);
+
+  // Restrict ticking while editing
+  const handleSelectTask = (idx) => {
+    if (editIdx !== null || addingNew) {
+      window.alert("Please click SAVE or CANCEL before selecting other tasks.");
+      return;
+    }
+    setSelectedTasks((prev) => prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]);
+  };
+
+  const handleSelectAllTasks = () => {
+    if (editIdx !== null || addingNew) {
+      window.alert("Please click SAVE or CANCEL before selecting other tasks.");
+      return;
+    }
+    setSelectedTasks(selectedAllTasks ? [] : tasks.map((_, i) => i));
+  };
+
+  // Bulk Action Handlers
+  const handleBulkEdit = () => {
+    if (!canEdit || selectedTasks.length !== 1) return;
+    handleEdit(selectedTasks[0]);
+  };
+  const handleBulkMarkDone = () => {
+    if (!canEdit) return;
+    selectedTasks.forEach(idx => {
+      const task = tasks[idx];
+      if (task.status !== "Done") {
+        updateTask(task.id, { ...task, status: "Done" })
+          .then((res) => setTasks(prev => prev.map((t, i) => i === idx ? res.data : t)));
+      }
+    });
+    setSelectedTasks([]);
+  };
+  const handleBulkDelete = () => {
+    if (!canEdit || selectedTasks.length !== 1) return;
+    handleDelete(selectedTasks[0]);
+    setSelectedTasks([]);
+  };
+  const handleBulkSave = () => {
+    if (!canEdit || selectedTasks.length !== 1) return;
+    handleSave(selectedTasks[0]);
+    setSelectedTasks([]);
+  };
+
+  // --- Form logic
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setEditTask((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleEditMembers = (e) => {
     setEditTask((prev) => ({
       ...prev,
@@ -1288,42 +1350,106 @@ export default function TaskManagement() {
     }));
   };
 
-  const handleEdit = (idx) => {
-    setEditIdx(idx);
-    setEditTask({ ...tasks[idx] });
-    setAddingNew(false);
-  };
-
-  const handleSave = (idx) => {
-    if (addingNew) {
-      setTasks([
-        ...tasks,
-        { ...editTask, dueStatus: calculateDueStatus(editTask) }
-      ]);
-      setAddingNew(false);
+  // --- File Modal logic ---
+  const openFileModal = (idx, type) => {
+    setShowFileModal(true);
+    setModalIdx(idx);
+    setFileType(type);
+    const task = idx === "addingNew" ? editTask : tasks[idx];
+    if (type === "attachment") {
+      setModalFile(task?.file || "");
     } else {
-      const updated = tasks.map((t, i) =>
-        i === idx
-          ? { ...editTask, dueStatus: calculateDueStatus(editTask) }
-          : t
-      );
-      setTasks(updated);
+      setModalFile(task?.submissionFileName || "");
     }
-    setEditIdx(null);
-    setEditTask(null);
+    setModalFileObj(null);
+  };
+  const closeFileModal = () => {
+    setShowFileModal(false);
+    setModalFile("");
+    setModalFileObj(null);
+    setModalIdx(null);
+    setFileType("");
   };
 
-  const handleCancel = () => {
-    setEditIdx(null);
-    setEditTask(null);
-    setAddingNew(false);
+  const handleModalFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setModalFile(e.target.files[0].name);
+      setModalFileObj(e.target.files[0]);
+    }
   };
 
-  const handleDelete = (idx) => {
-    setTasks(tasks.filter((_, i) => i !== idx));
+  const handleModalUpload = async () => {
+    if (!modalFileObj) {
+      closeFileModal();
+      return;
+    }
+    try {
+      const res = await uploadTaskFile(modalFileObj);
+      const fileName = modalFile;
+      const fileUrl = res.data.url;
+
+      if (modalIdx === "addingNew") {
+        setEditTask((prev) => ({
+          ...prev,
+          ...(fileType === "attachment"
+            ? { file: fileName, fileUrl }
+            : { submissionFileName: fileName, submissionFileUrl: fileUrl }),
+        }));
+      } else {
+        setTasks((prev) =>
+          prev.map((task, i) =>
+            i === modalIdx
+              ? {
+                  ...task,
+                  ...(fileType === "attachment"
+                    ? { file: fileName, fileUrl }
+                    : { submissionFileName: fileName, submissionFileUrl: fileUrl }),
+                }
+              : task
+          )
+        );
+        if (editIdx === modalIdx) {
+          setEditTask((prev) => ({
+            ...prev,
+            ...(fileType === "attachment"
+              ? { file: fileName, fileUrl }
+              : { submissionFileName: fileName, submissionFileUrl: fileUrl }),
+          }));
+        }
+      }
+      closeFileModal();
+    } catch (err) {
+      alert("File upload failed: " + (err?.response?.data || err));
+    }
   };
 
+  // File native input for attachment (used in table row)
+  const handleAttachmentFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setAttachmentFileObj(e.target.files[0]);
+      setEditTask((prev) => ({
+        ...prev,
+        file: e.target.files[0].name,
+      }));
+    }
+  };
+  const handleAttachmentUpload = async () => {
+    if (!attachmentFileObj) return;
+    try {
+      const res = await uploadTaskFile(attachmentFileObj);
+      setEditTask((prev) => ({
+        ...prev,
+        fileUrl: res.data.url,
+      }));
+      setAttachmentFileObj(null);
+    } catch (err) {
+      alert("File upload failed: " + (err?.response?.data || err));
+    }
+  };
+
+  // CRUD
   const handleAddNew = () => {
+    if (!canEdit) return;
     setAddingNew(true);
     setEditTask({
       title: "",
@@ -1335,297 +1461,457 @@ export default function TaskManagement() {
       priority: priorityOptions[0],
       status: statusOptions[0],
       file: "",
+      fileUrl: "",
+      submissionFileName: "",
+      submissionFileUrl: "",
     });
-  };
-
-  const handleFileAttachmentChange = (e) => {
-    setEditTask((prev) => ({
-      ...prev,
-      fileAttachment: e.target.files[0]?.name || "",
-    }));
-  };
-
-  const handleFileSubmissionChange = (e) => {
-    setEditTask((prev) => ({
-      ...prev,
-      fileSubmission: e.target.files[0]?.name || "",
-    }));
-  };
-
-  const handleAddComment = (taskIdx) => {
-    if (!mentionInput && !commentFile) return;
-
-    const mentionsRegex = /@(\w+)/g;
-    const mentionedUsers = [];
-    let match;
-    while ((match = mentionsRegex.exec(mentionInput)) !== null) {
-      const userId = match[1];
-      mentionedUsers.push(userId);
-    }
-
-    setComments((prev) => ({
-      ...prev,
-      [taskIdx]: [
-        ...(prev[taskIdx] || []),
-        {
-          text: mentionInput,
-          file: commentFile
-        }
-      ],
-    }));
-
-    mentionedUsers.forEach(user => {
-      addNotification({
-        id: Date.now() + Math.random(),
-        user,
-        message: `You were mentioned in task ${tasks[taskIdx].title}: "${mentionInput}"`,
-        time: new Date().toLocaleString(),
-      });
-    });
-
-    setMentionInput("");
-    setCommentFile(null);
-  };
-
-  const openCommentsPanel = (idx) => {
-    setCurrentCommentTaskIdx(idx);
-    setShowCommentsPanel(true);
-  };
-
-  const closeCommentsPanel = () => {
-    setShowCommentsPanel(false);
-    setCurrentCommentTaskIdx(null);
-  };
-
-  const handleSelectTask = (idx) => {
-    setSelectedTasks((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
-    );
-  };
-
-  const handleSelectAllTasks = () => {
-    if (selectedAllTasks) {
-      setSelectedTasks([]);
-    } else {
-      setSelectedTasks(tasks.map((_, i) => i));
-    }
-  };
-
-  const handleBulkDeleteTasks = () => {
-    const updated = tasks.filter((_, idx) => !selectedTasks.includes(idx));
-    setTasks(updated);
+    setEditIdx(null);
     setSelectedTasks([]);
   };
 
-  const handleBulkEditTasks = () => {
-    if (selectedTasks.length === 1) {
-      const idx = selectedTasks[0];
-      setEditIdx(idx);
-      setEditTask({ ...tasks[idx] });
+  const handleEdit = (idx) => {
+    if (!canEdit) return;
+    setEditIdx(idx);
+    setEditTask({ ...tasks[idx] });
+    setAddingNew(false);
+    setSelectedTasks([idx]);
+  };
+
+  const handleSave = (idx) => {
+    if (!canEdit) return;
+    if (!editTask.title?.trim()) return alert("Title is required");
+    if (!editTask.startDate) return alert("Start Date is required");
+    if (!editTask.dueDate) return alert("Due Date is required");
+
+    const payload = {
+      ...editTask,
+      projectId: parseInt(projectId),
+      members: Array.isArray(editTask.members) ? editTask.members : [],
+      file: editTask.file || "",
+      fileUrl: editTask.fileUrl || "",
+      submissionFileName: editTask.submissionFileName || "",
+      submissionFileUrl: editTask.submissionFileUrl || "",
+    };
+
+    if (addingNew) {
+      addTask(payload)
+        .then((res) => setTasks([...tasks, res.data]))
+        .catch((err) => alert("Failed to add task: " + (err?.response?.data || err)));
       setAddingNew(false);
     } else {
-      alert("Please select only one task to edit at a time.");
+      const taskId = tasks[editIdx].id;
+      updateTask(taskId, payload)
+        .then((res) => {
+          setTasks(tasks.map((t, i) => (i === editIdx ? res.data : t)));
+        })
+        .catch((err) => alert("Failed to update task: " + (err?.response?.data || err)));
     }
-  };
-
-  const handleBulkMarkAsDone = () => {
-    const today = new Date().toISOString().split("T")[0];
-    setTasks(prevTasks =>
-      prevTasks.map((task, i) =>
-        selectedTasks.includes(i)
-          ? {
-              ...task,
-              status: "Done",
-              completedDate: today,
-              dueStatus: calculateDueStatus({ ...task, status: "Done", completedDate: today })
-            }
-          : task
-      )
-    );
-    setSelectedTasks([]); // clear selection after marking as done
-  };
-
-  const handleBulkSaveTasks = () => {
-    console.log("Tasks saved:", tasks);
-    alert("Changes have been saved successfully!");
+    setEditIdx(null);
+    setEditTask(null);
+    setAttachmentFileObj(null);
     setSelectedTasks([]);
+  };
+
+  const handleCancel = () => {
     setEditIdx(null);
     setEditTask(null);
     setAddingNew(false);
+    setAttachmentFileObj(null);
+    setSelectedTasks([]);
   };
 
-  const calculateDueStatus = (task) => {
-    const today = new Date().toISOString().split("T")[0];
-    if (task.status !== "Done") {
-      // If not done yet, check if overdue
-      return today > task.dueDate ? "Overdue" : "On track";
-    } else {
-      // If done, check if done on time
-      return task.completedDate && task.completedDate <= task.dueDate
-        ? "Done on time"
-        : "Done overdue";
-    }
+  const handleDelete = (idx) => {
+    if (!canEdit) return;
+    const taskId = tasks[idx].id;
+    deleteTask(taskId)
+      .then(() => setTasks(tasks.filter((_, i) => i !== idx)))
+      .catch((err) => alert("Failed to delete task: " + (err?.response?.data || err)));
+    setEditIdx(null);
+    setAddingNew(false);
+    setSelectedTasks([]);
   };
 
-  useEffect(() => {
-    setTasks(prevTasks =>
-      prevTasks.map(task => ({
-        ...task,
-        dueStatus: calculateDueStatus(task)
-      }))
-    );
-  }, []);
+  // Comments
+  
+  // Comments: per-task state
+    const handleAddComment = async (taskIdx) => {
+      const taskId = tasks[taskIdx]?.id;
+      if (!mentionInputs[taskId] && !commentFiles[taskId]) return;
 
+      // Find mentioned users for notification
+      const mentionsRegex = /@\[[^\]]+\]\(([^)]+)\)/g;
+      let mentionedUsers = [];
+      let match;
+      while ((match = mentionsRegex.exec(mentionInputs[taskId] || "")) !== null) {
+        mentionedUsers.push(match[1]);
+      }
+        console.log("Mentioned users:", mentionedUsers);
+  // // File upload logic (per task)
+  //     let fileUrl = "";
+  //     const fileToUpload = commentFiles[taskId];
+  //     if (fileToUpload) {
+  //       const formData = new FormData();
+  //       formData.append("file", fileToUpload);
+  //       try {
+  //           const res = await axios.post(
+  //             "http://localhost:5047/api/comments/upload",
+  //             formData // Do NOT set headers here!
+  //         );
+  //         fileUrl = res.data.url;
+  //       } catch (e) {
+  //         alert("Failed to upload comment file: " + (e?.response?.data || e));
+  //         return; // Don’t add comment if file upload fails
+  //       }
+  //     }
+
+      // Prepare comment data
+      const task = tasks[taskIdx];
+      addComment({
+        taskId: task.id,
+        author: user.username,
+        text: mentionInputs[taskId], // includes emoji and mentions
+        fileUrl: "", // TODO: handle commentFile upload if needed
+      }).then(res => {
+        setComments(prev => [...prev, res.data]);
+        mentionedUsers.forEach((username) => {
+          console.log("Sending notification to:", username);
+          addNotification({
+            id: Date.now() + Math.random(),
+            user: username,
+            message: `You were mentioned in task ${task.title}: "${mentionInputs[taskId]}"`,
+            time: new Date().toLocaleString(),
+          });
+        });
+        setMentionInputs((prev) => ({ ...prev, [taskId]: "" }));
+        setCommentFiles((prev) => ({ ...prev, [taskId]: null }));
+        setShowEmojiPickers((prev) => ({ ...prev, [taskId]: false }));
+      });
+    };
+
+    const openCommentsPanel = (idx) => {
+      setCurrentCommentTaskIdx(idx);
+      setShowCommentsPanel(true);
+    };
+    const closeCommentsPanel = () => {
+      setShowCommentsPanel(false);
+      setCurrentCommentTaskIdx(null);
+    };
+  // const handleAddComment = (taskIdx) => {
+  //     if (!mentionInputs && !commentFiles) return;
+
+  //     // Find mentioned users for notification
+  //     const mentionsRegex = /@\[[^\]]+\]\(([^)]+)\)/g;
+  //     let mentionedUsers = [];
+  //     let match;
+  //     while ((match = mentionsRegex.exec(mentionInputs)) !== null) {
+  //       mentionedUsers.push(match[1]);
+  //     }
+
+  //     // Prepare comment data
+  //     const task = tasks[taskIdx];
+  //     addComment({
+  //       taskId: task.id,
+  //       author: user.username,
+  //       text: mentionInputs, // includes emoji and mentions
+  //       fileUrl: "",        // TODO: handle commentFile upload if needed
+  //     }).then(res => {
+  //       // Push new comment into comments array
+  //       setComments(prev => [...prev, res.data]);
+
+  //       // Send notification for each mentioned user
+  //       mentionedUsers.forEach((username) => {
+  //         addNotification({
+  //           id: Date.now() + Math.random(),
+  //           user: username,
+  //           message: `You were mentioned in task ${task.title}: "${mentionInputs}"`,
+  //           time: new Date().toLocaleString(),
+  //         });
+  //       });
+
+  //       setMentionInputs("");
+  //       setCommentFiles(null);
+  //     });
+  //   };
+
+  // // const handleAddComment = (taskIdx) => {
+  // //    if (!mentionInput && !commentFile) return;
+     
+  // //   // const mentionsRegex = /@(\w+)/g;
+  // //   // const mentionedUsers = [];
+  // //   // let match;
+  // //   // while ((match = mentionsRegex.exec(mentionInput)) !== null) {
+  // //   //   mentionedUsers.push(match[1]);
+  // //   // }
+  // //   const mentionsRegex = /@\[[^\]]+\]\(([^)]+)\)/g;
+  // //   let mentionedUsers = [];
+  // //   let match;
+  // //   while ((match = mentionsRegex.exec(mentionInput)) !== null) {
+  // //     mentionedUsers.push(match[1]);
+  // //   }
+  // //   console.log("mentionInput:", mentionInput);
+  // //   console.log("mentionedUsers:", mentionedUsers);
+  // //   setComments((prev) => ({
+  // //     ...prev,
+  // //     [taskIdx]: [
+  // //       ...(prev[taskIdx] || []),
+  // //       { text: mentionInput, file: commentFile },
+  // //     ],
+  // //   }));
+  // //   console.log("mentionInput:", mentionInput);
+  // //   console.log("mentionedUsers:", mentionedUsers);
+  // //   mentionedUsers.forEach((user) => {
+  // //     addNotification({
+  // //       id: Date.now() + Math.random(),
+  // //       user,
+  // //       message: `You were mentioned in task ${tasks[taskIdx]?.title}: "${mentionInput}"`,
+  // //       time: new Date().toLocaleString(),
+  // //     });
+  // //   });
+  // //   setMentionInput("");
+  // //   setCommentFile(null);
+  // // };
+
+
+  // const openCommentsPanel = (idx) => {
+  //   setCurrentCommentTaskIdx(idx);
+  //   setShowCommentsPanel(true);
+  // };
+  // const closeCommentsPanel = () => {
+  //   setShowCommentsPanel(false);
+  //   setCurrentCommentTaskIdx(null);
+  // };
+
+  // Renderers
   const renderDueStatusBadge = (task) => {
     const today = new Date().toISOString().split("T")[0];
     let content, color, Icon;
-
+    const dueDate = (typeof task.dueDate === "string" ? task.dueDate.substring(0,10) : task.dueDate);
     if (task.status !== "Done") {
-      if (today <= task.dueDate) {
-        content = "On track";
-        color = "bg-blue-100 text-blue-800";
-        Icon = InformationCircleIcon;
+      if (today <= dueDate) {
+        content = "On track"; color = "bg-blue-100 text-blue-800"; Icon = InformationCircleIcon;
       } else {
-        content = "Overdue";
-        color = "bg-red-100 text-red-800";
-        Icon = ExclamationCircleIcon;
+        content = "Overdue"; color = "bg-red-100 text-red-800"; Icon = ExclamationCircleIcon;
       }
     } else {
-      if (task.completedDate <= task.dueDate) {
-        content = "Done on time";
-        color = "bg-green-100 text-green-800";
-        Icon = CheckCircleIcon;
+      if ((task.completedDate || today) <= dueDate) {
+        content = "Done on time"; color = "bg-green-100 text-green-800"; Icon = CheckCircleIcon;
       } else {
-        content = "Done overdue";
-        color = "bg-red-100 text-red-800";
-        Icon = MinusCircleIcon;
+        content = "Done overdue"; color = "bg-red-100 text-red-800"; Icon = MinusCircleIcon;
       }
     }
-
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${color}`}>
-        <Icon className="h-4 w-4" />
-        {content}
+        <Icon className="h-4 w-4" />{content}
       </span>
     );
   };
-
-  const handleMarkAsDone = (idx) => {
-    const today = new Date().toISOString().split("T")[0];
-    setTasks(prevTasks =>
-      prevTasks.map((task, i) =>
-        i === idx
-          ? {
-              ...task,
-              status: "Done",
-              completedDate: today,
-              dueStatus: calculateDueStatus({ ...task, status: "Done", completedDate: today })
-            }
-          : task
-      )
-    );
-  };
-
   const renderPriorityBadge = (priority) => {
     let colorClasses = "";
-
-    switch(priority) {
-      case "High":
-        colorClasses = "bg-red-700 text-white";
-        break;
-      case "Medium":
-        colorClasses = "bg-orange-500 text-white";
-        break;
-      case "Low":
-        colorClasses = "bg-blue-400 text-white";
-        break;
-      default:
-        colorClasses = "bg-gray-200 text-gray-800";
+    switch (priority) {
+      case "High": colorClasses = "bg-red-700 text-white"; break;
+      case "Medium": colorClasses = "bg-orange-500 text-white"; break;
+      case "Low": colorClasses = "bg-blue-400 text-white"; break;
+      default: colorClasses = "bg-gray-200 text-gray-800";
     }
-
     return (
-      <span className={`inline-block px-3 py-1 rounded-full text-xs font-normal ${colorClasses}`}>
-        {priority}
-      </span>
+      <span className={`inline-block px-3 py-1 rounded-full text-xs font-normal ${colorClasses}`}>{priority}</span>
     );
   };
-
   const renderStatusBadge = (status) => {
     let bgColor, textColor, Icon;
-
     if (status === "To-Do") {
-      bgColor = "bg-gray-200";
-      textColor = "text-gray-800";
-      Icon = EllipsisHorizontalCircleIcon;
+      bgColor = "bg-gray-200"; textColor = "text-gray-800"; Icon = EllipsisHorizontalCircleIcon;
     } else if (status === "In Progress") {
-      bgColor = "bg-yellow-100";
-      textColor = "text-yellow-800";
-      Icon = ClockIcon;
-    } else { // Done
-      bgColor = "bg-green-100";
-      textColor = "text-green-800";
-      Icon = CheckCircleIcon;
+      bgColor = "bg-yellow-100"; textColor = "text-yellow-800"; Icon = ClockIcon;
+    } else {
+      bgColor = "bg-green-100"; textColor = "text-green-800"; Icon = CheckCircleIcon;
     }
-
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
-        <Icon className="h-4 w-4" />
-        {status}
+        <Icon className="h-4 w-4" />{status}
       </span>
     );
   };
 
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Task Management</h1>
-      <button
-        className="mb-8 bg-mycustomblue text-white font-medium px-4 py-2 rounded"
-        onClick={handleAddNew}
-      >
-        Create New Task
-      </button>
+  //--Get project name
+  const [projectName, setProjectName] = useState("Loading...");
+  useEffect(() => {
+    if (!projectId) return;
+    axios.get(`http://localhost:5047/api/projects/${projectId}`)
+      .then(res => {
+        console.log("Project fetch result:", res.data);
+        setProjectName(res.data.title || "Project");
+      })
+      .catch(err => {
+        console.log("Project fetch error:", err);
+        setProjectName("Project");
+      });
+  }, [projectId]);
 
-      {selectedTasks.length > 0 && (
+  // user list
+  const [usersList, setUsersList] = useState([]);
+
+  useEffect(() => {
+    axios.get("http://localhost:5047/api/User")
+      .then(res => {
+        setUsersList(
+          res.data.map(user => ({
+            id: user.username,
+            display: user.username
+          }))
+        );
+      });
+  }, []);
+  // --- UI Render ---
+  return (
+    <div className="p-8 min-h-screen bg-[#f6f8fa]">
+      {/* Breadcrumb */}
+       <div className="flex items-center mb-6">
+        <span
+          className="mr-4 hover:text-mycustomblue cursor-pointer text-3xl font-bold"
+          onClick={() => navigate('/projects')}
+        >
+          Projects
+        </span>
+        <ChevronRightIcon className="h-5 w-5 text-gray-500" />
+            <span className="ml-2 text-3xl font-bold text-gray-800">
+              {projectName}
+           </span>
+      </div>
+
+      {canEdit && (
+        <button
+          className="mb-8 bg-mycustomblue text-white font-medium px-4 py-2 rounded"
+          onClick={handleAddNew}
+        >
+          Create New Task
+        </button>
+      )}
+
+      {/* ACTION BAR */}
+      {/* {selectedTasks.length > 0 && (
         <div className="bg-white border rounded mb-2 px-4 py-2 flex items-center justify-between shadow-sm">
-          <span className="text-xs text-gray-800">SELECTED: {selectedTasks.length}</span>
+          <span className="text-xs text-gray-800">
+            SELECTED: {selectedTasks.length}
+          </span>
           <div className="flex gap-2">
             <button
-              onClick={handleBulkEditTasks}
-              className="bg-white hover:bg-gray-200 px-3 py-1 rounded shadow-sm hover:shadow text-gray-800 text-xs"
+              onClick={handleBulkEdit}
+              className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+              disabled={!canEdit || selectedTasks.length !== 1 || editIdx !== null || addingNew}
             >
               EDIT
             </button>
             <button
-              onClick={handleBulkMarkAsDone}
-              className="bg-white hover:bg-gray-200 px-3 py-1 rounded shadow-sm hover:shadow text-gray-800 text-xs"
+              onClick={handleBulkMarkDone}
+              className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+              disabled={!canEdit}
             >
               MARK AS DONE
             </button>
             <button
-              onClick={handleBulkDeleteTasks}
-              className="bg-white hover:bg-gray-200 px-3 py-1 rounded shadow-sm hover:shadow text-gray-800 text-xs"
+              onClick={handleBulkDelete}
+              className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+              disabled={!canEdit || selectedTasks.length !== 1}
             >
               DELETE
             </button>
+            {editIdx !== null && selectedTasks.length === 1 && selectedTasks[0] === editIdx && (
+              <button
+                onClick={handleBulkSave}
+                className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+              >
+                SAVE
+              </button>
+            )}
             <button
-              onClick={handleBulkSaveTasks}
-              className="bg-white hover:bg-green-200 text-gray-800 px-3 py-1 rounded shadow-sm hover:shadow text-xs"
+              onClick={handleCancel}
+              className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
             >
-              SAVE
+              CANCEL
             </button>
           </div>
         </div>
-      )}
+      )} */}
+
+    {(selectedTasks.length > 0 || addingNew) && (
+      <div className="bg-white border rounded mb-2 px-4 py-2 flex items-center justify-between shadow-sm">
+        <span className="text-xs text-gray-800">
+          {addingNew ? "ADDING NEW TASK" : `SELECTED: ${selectedTasks.length}`}
+        </span>
+        <div className="flex gap-3">
+          {addingNew ? (
+            <>
+              <button
+                onClick={handleBulkSave}
+                className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+              >
+                SAVE
+              </button>
+              <button
+                onClick={handleCancel}
+                className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+              >
+                CANCEL
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Show EDIT when only one is selected, and not in edit mode or adding new */}
+              {selectedTasks.length === 1 && editIdx === null && !addingNew && (
+                <button
+                  onClick={() => handleBulkEdit(selectedTasks[0])}
+                  className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+                >
+                  EDIT
+                </button>
+              )}
+              {/* Show SAVE when one is selected and in edit mode */}
+              {editIdx !== null && selectedTasks.length === 1 && selectedTasks[0] === editIdx && (
+                <button
+                  onClick={handleBulkSave}
+                  className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+                >
+                  SAVE
+                </button>
+              )}
+              {/* Always allow mark as done and delete if editable */}
+              <button
+                onClick={handleBulkMarkDone}
+                className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+                disabled={!canEdit}
+              >
+                MARK AS DONE
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+                disabled={!canEdit}
+              >
+                DELETE
+              </button>
+              <button
+                onClick={handleCancel}
+                className="bg-white shadow-sm rounded px-4 py-1.5 text-gray-800 font-medium text-xs outline-none hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-gray-200 transition"
+              >
+                CANCEL
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    )}
 
       <div className="overflow-x-auto w-full">
-        <table className="min-w-[1600px] bg-white border whitespace-nowrap">
+        <table className="min-w-[1400px] bg-white border whitespace-nowrap">
           <thead>
             <tr>
-              <th className="border px-4 py-2 text-left text-sm font-semibold">
+              <th className="sticky left-0 bg-white z-10 border px-4 py-2 text-left text-sm font-semibold">
                 <input
                   type="checkbox"
                   checked={selectedAllTasks}
                   onChange={handleSelectAllTasks}
+                  disabled={!canEdit || editIdx !== null || addingNew}
                 />
               </th>
               <th className="border px-4 py-2 text-left text-sm font-semibold">ID</th>
@@ -1641,38 +1927,33 @@ export default function TaskManagement() {
               <th className="border px-4 py-2 text-left text-sm font-semibold">Actions</th>
             </tr>
           </thead>
-
           <tbody>
             {tasks.map((task, idx) => (
-              <tr key={idx} className={selectedTasks.includes(idx) ? "bg-green-50" : ""}>
-                <td className="border px-4 py-2 text-sm font-normal">
+              <tr key={task.id || idx} className={selectedTasks.includes(idx) ? "bg-green-50" : ""}>
+                <td className="sticky left-0 bg-white z-10 border px-4 py-2 text-sm font-normal">
                   <input
                     type="checkbox"
                     checked={selectedTasks.includes(idx)}
                     onChange={() => handleSelectTask(idx)}
+                    disabled={!canEdit || editIdx !== null || addingNew}
                   />
                 </td>
-                {/* ID cell */}
                 <td className="border px-4 py-2 text-sm font-normal">{idx + 1}</td>
-                {/* Task Title */}
                 <td className="border px-4 py-2 text-sm font-normal">
                   <div className="flex items-center gap-2">
                     <ClipboardDocumentIcon className="h-5 w-5 text-blue-500" />
-                    {editIdx === idx ? (
+                    {(canEdit && editIdx === idx) ? (
                       <input
                         name="title"
                         value={editTask.title}
                         onChange={handleFormChange}
                         className="border px-2 py-1 rounded w-full"
                       />
-                    ) : (
-                      task.title
-                    )}
+                    ) : task.title}
                   </div>
                 </td>
-                {/* Description */}
                 <td className="border px-4 py-2 text-sm font-normal">
-                  {editIdx === idx ? (
+                  {(canEdit && editIdx === idx) ? (
                     <input
                       name="description"
                       value={editTask.description}
@@ -1687,9 +1968,8 @@ export default function TaskManagement() {
                     </Tippy>
                   )}
                 </td>
-                {/* Status */}
                 <td className="border px-4 py-2 text-sm font-normal">
-                  {editIdx === idx ? (
+                  {(canEdit && editIdx === idx) ? (
                     <select
                       name="status"
                       value={editTask.status}
@@ -1704,9 +1984,8 @@ export default function TaskManagement() {
                     renderStatusBadge(task.status)
                   )}
                 </td>
-                {/* Priority */}
                 <td className="border px-4 py-2 text-sm font-normal">
-                  {editIdx === idx ? (
+                  {(canEdit && editIdx === idx) ? (
                     <select
                       name="priority"
                       value={editTask.priority}
@@ -1721,31 +2000,29 @@ export default function TaskManagement() {
                     renderPriorityBadge(task.priority)
                   )}
                 </td>
-                {/* Assigned Members */}
                 <td className="border px-4 py-2 text-sm font-normal">
-                  {editIdx === idx ? (
+                  {(canEdit && editIdx === idx) ? (
                     <input
                       name="members"
-                      value={editTask.members.join(", ")}
+                      value={editTask.members?.join(", ") || ""}
                       onChange={handleEditMembers}
                       className="border px-2 py-1 rounded w-full"
                     />
                   ) : (
                     <ul className="list-disc pl-4">
-                      {task.members.map((m) => (
+                      {(task.members || []).map((m) => (
                         <li key={m}>{m}</li>
                       ))}
                     </ul>
                   )}
                 </td>
-                {/* Timeline */}
                 <td className="border px-4 py-2 text-sm font-normal">
-                  {editIdx === idx ? (
+                  {(canEdit && editIdx === idx) ? (
                     <div className="flex gap-2">
                       <input
                         type="date"
                         name="startDate"
-                        value={editTask.startDate}
+                        value={editTask.startDate?.substring(0, 10) || ""}
                         onChange={handleFormChange}
                         className="border px-2 py-1 rounded"
                       />
@@ -1753,101 +2030,121 @@ export default function TaskManagement() {
                       <input
                         type="date"
                         name="dueDate"
-                        value={editTask.dueDate}
+                        value={editTask.dueDate?.substring(0, 10) || ""}
                         onChange={handleFormChange}
                         className="border px-2 py-1 rounded"
                       />
                     </div>
                   ) : (
-                    `${task.startDate} - ${task.dueDate}`
+                    `${String(task.startDate).substring(0, 10)} - ${String(task.dueDate).substring(0, 10)}`
                   )}
                 </td>
-                {/* Due Status */}
                 <td className="border px-4 py-2 text-sm font-normal">
                   {renderDueStatusBadge(task)}
-                </td>       
-                {/* File Attachment */}
+                </td>
+                {/* File Attachment (native file input like screenshot 4, and modal as fallback) */}
                 <td className="border px-4 py-2 text-sm font-normal text-center">
-                  {editIdx === idx ? (
-                    <input type="file" onChange={handleFileAttachmentChange} />
+                  {(canEdit && editIdx === idx) ? (
+                    <div className="flex flex-col items-center">
+                      <input
+                        type="file"
+                        onChange={handleAttachmentFileChange}
+                        className="mb-1"
+                        accept="*"
+                      />
+                      {editTask.file && (
+                        <div className="text-xs text-gray-800 mb-1">
+                          Current file: <span className="font-semibold">{editTask.file}</span>
+                        </div>
+                      )}
+                      {attachmentFileObj && (
+                        <button
+                          className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                          onClick={handleAttachmentUpload}
+                          type="button"
+                        >
+                          Upload
+                        </button>
+                      )}
+                    </div>
                   ) : (
-                    task.fileAttachment && (
+                    task.file && task.fileUrl && (
                       <a
-                        href={`/uploads/attachments/${task.fileAttachment}`}
+                        href={`http://localhost:5047${task.fileUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className="flex items-center gap-2"
                       >
-                        <DocumentTextIcon Icon className="h-5 w-5 text-blue-500 inline-block" />
+                        <DocumentTextIcon className="h-5 w-5 text-blue-500 inline-block" />
+                        <span>{task.file}</span>
                       </a>
                     )
                   )}
                 </td>
-                {/* File Submission */}
+                {/* File Submission (View only) */}
                 <td className="border px-4 py-2 text-sm font-normal text-center">
-                  {editIdx === idx ? (
-                    <input type="file" onChange={handleFileSubmissionChange} />
+                  {task.submissionFileName && task.submissionFileUrl ? (
+                    <a
+                      href={`http://localhost:5047${task.submissionFileUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <DocumentTextIcon className="h-5 w-5 text-black-500 inline-block" />
+                      <span>{task.submissionFileName}</span>
+                    </a>
                   ) : (
-                    task.fileSubmission && (
-                      <a
-                        href={`/uploads/submissions/${task.fileSubmission}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <DocumentTextIcon Icon className="h-5 w-5 text-black-500 inline-block" />
-                      </a>
-                    )
+                    <span className="text-gray-400">No Submission</span>
                   )}
                 </td>
                 {/* Actions */}
                 <td className="border px-4 py-2 text-xs font-medium">
-                  {editIdx === idx ? (
-                    <div className="flex gap-2">
-                      <button
-                        className="bg-green-500 text-white px-2 py-1 rounded"
-                        onClick={() => handleSave(idx)}
-                      >
-                        SAVE
-                      </button>
-                      <button
-                        className="bg-gray-400 text-white px-2 py-1 rounded"
-                        onClick={handleCancel}
-                      >
-                        CANCEL
-                      </button>
-                    </div>
+                  {canEdit ? (
+                    editIdx === idx ? (
+                      <div className="flex gap-2">
+                        <button
+                          className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
+                          onClick={() => handleSave(idx)}
+                        >SAVE</button>
+                        <button
+                          className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
+                          onClick={handleCancel}
+                        >CANCEL</button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 text-xs font-medium">
+                        <button
+                          className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
+                          onClick={() => openCommentsPanel(idx)}
+                        >
+                          <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5" />
+                        </button>
+                        {/* <button
+                          className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
+                          onClick={() => handleEdit(idx)}
+                          disabled={editIdx !== null || addingNew}
+                        >EDIT</button>
+                        <button
+                          className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
+                          onClick={() => handleBulkMarkDone(idx)}
+                        >MARK AS DONE</button>
+                        <button
+                          className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
+                          onClick={() => handleDelete(idx)}
+                        >DELETE</button>
+                        <button
+                          className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
+                          onClick={handleCancel}
+                        >CANCEL</button> */}
+                      </div>
+                    )
                   ) : (
-                    <div className="flex gap-2 text-xs font-medium">
-                      <button
-                        className="bg-gray-200 text-gray-800 px-2 py-1 rounded"
-                        onClick={() => openCommentsPanel(idx)}
-                      >
-                        <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5" />
-                      </button>
-                      <button
-                        className="bg-yellow-400 px-2 py-1 rounded"
-                        onClick={() => handleEdit(idx)}
-                      >
-                        EDIT
-                      </button>
-                      <button
-                        className="bg-red-500 text-white px-2 py-1 rounded"
-                        onClick={() => handleDelete(idx)}
-                      >
-                        DELETE
-                      </button>
-                      <button
-                        className="bg-blue-500 text-white px-2 py-1 rounded"
-                        onClick={() => handleMarkAsDone(idx)}
-                      >
-                        MARK AS DONE
-                      </button>
-                    </div>
+                    <span className="text-gray-500">View Only</span>
                   )}
                 </td>
               </tr>
             ))}
-
-            {addingNew && (
+            {(canEdit && addingNew) && (
               <tr className="bg-yellow-50">
                 <td className="border px-4 py-2 text-sm font-normal"></td>
                 <td className="border px-4 py-2 text-sm font-normal">{tasks.length + 1}</td>
@@ -1894,7 +2191,7 @@ export default function TaskManagement() {
                 <td className="border px-4 py-2 text-sm font-normal">
                   <input
                     name="members"
-                    value={editTask.members.join(", ")}
+                    value={editTask.members?.join(", ") || ""}
                     onChange={handleEditMembers}
                     className="border px-2 py-1 rounded w-full"
                   />
@@ -1918,29 +2215,44 @@ export default function TaskManagement() {
                     />
                   </div>
                 </td>
-                <td className="border px-4 py-2 text-sm font-normal">
-                  {/* Due status can be calculated after saving */}
+                <td className="border px-4 py-2 text-sm font-normal"></td>
+                <td className="border px-4 py-2 text-sm font-normal text-center">
+                  <div className="flex flex-col items-center">
+                    <input
+                      type="file"
+                      onChange={handleAttachmentFileChange}
+                      className="mb-1"
+                    />
+                    {editTask.file && (
+                      <div className="text-xs text-gray-800 mb-1">
+                        Current file: <span className="font-semibold">{editTask.file}</span>
+                      </div>
+                    )}
+                    {attachmentFileObj && (
+                      <button
+                        className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                        onClick={handleAttachmentUpload}
+                        type="button"
+                      >
+                        Upload
+                      </button>
+                    )}
+
+                  </div>
                 </td>
                 <td className="border px-4 py-2 text-sm font-normal text-center">
-                  <input type="file" onChange={handleFileAttachmentChange} />
-                </td>
-                <td className="border px-4 py-2 text-sm font-normal text-center">
-                  <input type="file" onChange={handleFileSubmissionChange} />
+                  <span className="text-gray-400">No Submission</span>
                 </td>
                 <td className="border px-4 py-2 text-xs font-medium">
                   <div className="flex gap-2">
                     <button
-                      className="bg-green-500 text-white px-2 py-1 rounded"
-                      onClick={() => handleSave(null)} // null indicates new task
-                    >
-                      SAVE
-                    </button>
+                      className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
+                      onClick={() => handleSave(null)}
+                    >SAVE</button>
                     <button
-                      className="bg-gray-400 text-white px-2 py-1 rounded"
+                      className="bg-gray-100 border border-gray-300 text-black px-2 py-1 rounded"
                       onClick={handleCancel}
-                    >
-                      CANCEL
-                    </button>
+                    >CANCEL</button>
                   </div>
                 </td>
               </tr>
@@ -1948,119 +2260,135 @@ export default function TaskManagement() {
           </tbody>
         </table>
       </div>
-
       {/* Side Comments Panel */}
+
+
       {showCommentsPanel && (
         <>
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={closeCommentsPanel}
-          ></div>
-
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={closeCommentsPanel}></div>
           <div className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-lg z-50 overflow-y-auto">
             <div className="flex justify-between items-center border-b px-6 py-3">
-              {/* Task Title */}
-              <h2 className="text-lg font-extrabold">
-                {tasks[currentCommentTaskIdx]?.title}
-              </h2>
+              <h2 className="text-lg font-extrabold">{tasks[currentCommentTaskIdx]?.title}</h2>
               <button onClick={closeCommentsPanel} className="text-gray-600 text-2xl font-extrabold">×</button>
             </div>
-
             <div className="border-t p-6">
               {/* Add Comment Section */}
               <div className="mb-8 relative">
                 <MentionsInput
-                  value={mentionInput}
-                  onChange={(e) => setMentionInput(e.target.value)}
+                  value={mentionInputs[tasks[currentCommentTaskIdx]?.id] || ""}
+                  onChange={(e) =>
+                    setMentionInputs((prev) => ({
+                      ...prev,
+                      [tasks[currentCommentTaskIdx]?.id]: e.target.value,
+                    }))
+                  }
                   className="border rounded p-2 w-full min-h-[80px]"
                   placeholder="Add Comment..."
                   style={{
-                    control: {
-                      padding: "8px", // apply to the input control
-                      fontSize: 14
-                    },
-                    highlighter: {
-                      padding: "8px" // also pad highlighted text area
-                    },
-                    input: {
-                      padding: "8px" // ensure input text has padding
-                    }
+                    control: { padding: "8px", fontSize: 14 },
+                    highlighter: { padding: "8px" },
+                    input: { padding: "8px" }
                   }}
                 >
                   <Mention trigger="@" data={usersList} className="bg-blue-200" />
                 </MentionsInput>
-
                 <div className="flex items-center justify-between mt-2">
                   <div className="flex gap-2">
+                    {/* Emoji Picker */}
                     <button
                       type="button"
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      onClick={() =>
+                        setShowEmojiPickers((prev) => ({
+                          ...prev,
+                          [tasks[currentCommentTaskIdx]?.id]: !prev[tasks[currentCommentTaskIdx]?.id],
+                        }))
+                      }
                       className="text-gray-600 hover:text-gray-800"
                     >
                       <FaceSmileIcon className="h-5 w-5" />
                     </button>
-
+                    {/* @ Button */}
                     <button
                       type="button"
-                      onClick={() => setMentionInput(prev => prev + '@')}
+                      onClick={() =>
+                        setMentionInputs((prev) => ({
+                          ...prev,
+                          [tasks[currentCommentTaskIdx]?.id]:
+                            (prev[tasks[currentCommentTaskIdx]?.id] || "") + "@",
+                        }))
+                      }
                       className="text-gray-600 hover:text-gray-800"
                     >
                       <AtSymbolIcon className="h-5 w-5" />
                     </button>
-
-                    <label className="cursor-pointer">
+                    {/* File Attachment */}
+                    {/* <label className="cursor-pointer">
                       <input
                         type="file"
                         className="hidden"
-                        onChange={(e) => setCommentFile(e.target.files[0])}
+                        onChange={(e) =>
+                          setCommentFiles((prev) => ({
+                            ...prev,
+                            [tasks[currentCommentTaskIdx]?.id]: e.target.files[0],
+                          }))
+                        }
                       />
                       <PaperClipIcon className="h-5 w-5 text-gray-600 hover:text-gray-800" />
-                    </label>
+                    </label> */}
                   </div>
-
                   <button
-                    className="bg-mycustomblue text-white px-4 py-1 rounded text-sm"
+                    className="bg-blue-700 text-white px-4 py-1 rounded text-sm"
                     onClick={() => {
                       handleAddComment(currentCommentTaskIdx);
-                      setShowEmojiPicker(false);
+                      setShowEmojiPickers((prev) => ({
+                        ...prev,
+                        [tasks[currentCommentTaskIdx]?.id]: false
+                      }));
                     }}
                   >
                     Send
                   </button>
                 </div>
-
-                {showEmojiPicker && (
+                {/* Show emoji picker for this task */}
+                {showEmojiPickers[tasks[currentCommentTaskIdx]?.id] && (
                   <div className="absolute z-50 mt-2">
                     <Picker
                       data={data}
-                      onEmojiSelect={(emoji) => setMentionInput(prev => prev + emoji.native)}
+                      onEmojiSelect={(emoji) =>
+                        setMentionInputs((prev) => ({
+                          ...prev,
+                          [tasks[currentCommentTaskIdx]?.id]:
+                            (prev[tasks[currentCommentTaskIdx]?.id] || "") + emoji.native,
+                        }))
+                      }
                       theme="light"
                     />
                   </div>
                 )}
               </div>
-
               {/* Published comments */}
-              {(comments[currentCommentTaskIdx] || []).map((comment, ci) => (
+              {comments.map((comment, ci) => (
                 <div key={ci} className="flex items-start gap-2 mb-4">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-gray-700">
-                      U
+                      {comment.author[0].toUpperCase()}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Username • 3 minutes ago</div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      {comment.author} • {new Date(comment.createdAt).toLocaleString()}
+                    </div>
                     <div className="bg-gray-100 rounded px-3 py-2 text-sm">
                       <p>{comment.text}</p>
-                      {comment.file && (
+                      {comment.fileUrl && (
                         <div className="mt-2">
                           <a
-                            href={URL.createObjectURL(comment.file)}
+                            href={comment.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 underline"
                           >
-                            {comment.file.name}
+                            File Attachment
                           </a>
                         </div>
                       )}
@@ -2072,6 +2400,8 @@ export default function TaskManagement() {
           </div>
         </>
       )}
+      
     </div>
   );
 }
+

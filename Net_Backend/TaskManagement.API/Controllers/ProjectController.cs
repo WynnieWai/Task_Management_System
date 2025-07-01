@@ -36,6 +36,31 @@ public class ProjectsController : ControllerBase
         }));
     }
 
+    // *** Get one project by ID  ***
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProject(int id)
+    {
+        var project = await _context.Projects
+            .Include(p => p.Tasks)
+            .FirstOrDefaultAsync(p => p.Id == id);
+        if (project == null) return NotFound();
+
+        var result = new ProjectDto
+        {
+            Id = project.Id,
+            Title = project.Title,
+            Goals = project.Goals,
+            Status = project.Status,
+            Manager = project.Manager,
+            StartDate = project.StartDate,
+            DueDate = project.DueDate,
+            DueStatus = project.DueStatus,
+            Members = project.Members?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToArray() ?? new string[0],
+            Tasks = project.Tasks?.Select(t => t.Title).ToArray() ?? new string[0]
+        };
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateProject(ProjectDto dto)
     {
