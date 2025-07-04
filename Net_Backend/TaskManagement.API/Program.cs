@@ -31,9 +31,9 @@ using (var scope = app.Services.CreateScope())
     if (!db.Users.Any())
     {
         db.Users.AddRange(
-            new User { Id = Guid.NewGuid(), UserId = 1, Username = "admin", PasswordHash = "admin123", Role = "Admin", Status = "Active" },
-            new User { Id = Guid.NewGuid(), UserId = 2, Username = "manager", PasswordHash = "manager123", Role = "ProjectManager", Status = "Active" },
-            new User { Id = Guid.NewGuid(), UserId = 3, Username = "student", PasswordHash = "student123", Role = "Contributor", Status = "Active" }
+            new User { Id = Guid.NewGuid(), UserId = 1, Username = "admin", PasswordHash = "admin123", Role = "Admin", Status = "Active", CreatedAt =  DateTime.UtcNow},
+            new User { Id = Guid.NewGuid(), UserId = 2, Username = "manager", PasswordHash = "manager123", Role = "Manager", Status = "Active", CreatedAt =  DateTime.UtcNow},
+            new User { Id = Guid.NewGuid(), UserId = 3, Username = "student", PasswordHash = "student123", Role = "Contributor", Status = "Active", CreatedAt =  DateTime.UtcNow}
         );
         db.SaveChanges();
     }

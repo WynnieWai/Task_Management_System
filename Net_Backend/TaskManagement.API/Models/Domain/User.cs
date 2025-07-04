@@ -10,5 +10,7 @@ namespace TaskManagement.API.Models.Domain
 
         public string Status { get; set; } = "Active"; // "Active" or "Locked"
 
+        public DateTime CreatedAt { get; set; }
+
     }
 }

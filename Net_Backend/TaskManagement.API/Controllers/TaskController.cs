@@ -565,5 +565,30 @@ public class TasksController : ControllerBase
         return Ok(result);
     }
 
+    // GET: api/tasks/{id}
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetTaskById(int id)
+    {
+        var t = await _context.Tasks.FindAsync(id);
+        if (t == null) return NotFound();
 
+        var dto = new TaskDto
+        {
+            Id = t.Id,
+            ProjectId = t.ProjectId,
+            Title = t.Title,
+            Description = t.Description,
+            Members = t.Members?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToArray() ?? new string[0],
+            StartDate = t.StartDate,
+            DueDate = t.DueDate,
+            DueStatus = t.DueStatus,
+            Priority = t.Priority,
+            Status = t.Status,
+            File = t.File,
+            FileUrl = t.FileUrl,
+            SubmissionFileName = t.SubmissionFileName,
+            SubmissionFileUrl = t.SubmissionFileUrl
+        };
+        return Ok(dto);
+    }
 }

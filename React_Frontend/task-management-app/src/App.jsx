@@ -24,101 +24,101 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <NotificationsProvider>
     <Router>
-      {user && (
-        <Sidebar
-          user={user}
-          setUser={setUser}
-          open={sidebarOpen}
-          setOpen={setSidebarOpen}
-        />
-      )}
-      <div
-        className={`transition-all duration-300 ${
-          user ? (sidebarOpen ? "ml-64" : "ml-16") : ""
-        }`}
-      >
-        {user && <Header user={user} />}
-        <Routes>
-          <Route
-            path="/"
-            element={
-              user ? <Navigate to="/dashboard" /> : <Login setUser={setUser} />
-            }
+      <NotificationsProvider user={user}>
+        {user && (
+          <Sidebar
+            user={user}
+            setUser={setUser}
+            open={sidebarOpen}
+            setOpen={setSidebarOpen}
           />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute user={user}>
-                <Dashboard user={user} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute user={user} role="admin">
-                <UserManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects"
-            element={
-              <ProtectedRoute user={user} roles={["admin", "manager", "contributor"]}>
-                <ProjectManagement user={user} sidebarOpen={sidebarOpen} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tasks"
-            element={
-              <ProtectedRoute user={user} roles={["manager", "contributor"]}>
-                <TaskBoard user={user} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tasks/:projectId"
-            element={
-              <ProtectedRoute user={user} roles={["admin", "manager", "contributor"]}>
-                <TaskManagement user={user} />
-              </ProtectedRoute>
-            }
-          />
+        )}
+        <div
+          className={`transition-all duration-300 ${
+            user ? (sidebarOpen ? "ml-64" : "ml-16") : ""
+          }`}
+        >
+          {user && <Header user={user} />}
+          <Routes>
+            <Route
+              path="/"
+              element={
+                user ? <Navigate to="/dashboard" /> : <Login setUser={setUser} />
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute user={user}>
+                  <Dashboard user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute user={user} role="admin">
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/projects"
+              element={
+                <ProtectedRoute user={user} roles={["admin", "manager", "contributor"]}>
+                  <ProjectManagement user={user} sidebarOpen={sidebarOpen} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <ProtectedRoute user={user} roles={["manager", "contributor"]}>
+                  <TaskBoard user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tasks/:projectId"
+              element={
+                <ProtectedRoute user={user} roles={["admin", "manager", "contributor"]}>
+                  <TaskManagement user={user} />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/notifications"
-            element={
-              <ProtectedRoute user={user}>
-                <Notifications user={user} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/teams"
-            element={
-              <ProtectedRoute user={user} roles={["admin", "manager", "contributor"]}>
-                <TeamManagement user={user} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute user={user}>
-                <Profile user={user} />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute user={user}>
+                  <Notifications user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teams"
+              element={
+                <ProtectedRoute user={user} roles={["admin", "manager", "contributor"]}>
+                  <TeamManagement user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute user={user}>
+                  <Profile user={user} />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* ... other routes remain unchanged */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+            {/* ... other routes remain unchanged */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      </NotificationsProvider>
     </Router>
-    </NotificationsProvider>
   );
 }
 

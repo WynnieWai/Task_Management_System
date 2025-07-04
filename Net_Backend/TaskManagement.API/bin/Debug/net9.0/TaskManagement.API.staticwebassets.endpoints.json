@@ -2955,6 +2955,88 @@
       ]
     },
     {
+      "Route": "uploads/fdc8d191-e61f-454a-a407-0367a9b0f18b.pdf",
+      "AssetFile": "uploads/fdc8d191-e61f-454a-a407-0367a9b0f18b.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "263179"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"iu8RB6til8u7sgRcvk9rQoS85AptcZWFBA0tJs3THWE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 02 Jul 2025 11:21:54 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-iu8RB6til8u7sgRcvk9rQoS85AptcZWFBA0tJs3THWE="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/fdc8d191-e61f-454a-a407-0367a9b0f18b.qrl92ijpae.pdf",
+      "AssetFile": "uploads/fdc8d191-e61f-454a-a407-0367a9b0f18b.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "263179"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"iu8RB6til8u7sgRcvk9rQoS85AptcZWFBA0tJs3THWE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 02 Jul 2025 11:21:54 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "qrl92ijpae"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-iu8RB6til8u7sgRcvk9rQoS85AptcZWFBA0tJs3THWE="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/fdc8d191-e61f-454a-a407-0367a9b0f18b.pdf"
+        }
+      ]
+    },
+    {
       "Route": "uploads/fee07e55-d1fa-4c29-9342-4040cd69bdb5.pdf",
       "AssetFile": "uploads/fee07e55-d1fa-4c29-9342-4040cd69bdb5.pdf",
       "Selectors": [],

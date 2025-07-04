@@ -648,6 +648,24 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\efd529b0-6f5e-44ec-a912-3d1a2b395c25.pdf'))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\fdc8d191-e61f-454a-a407-0367a9b0f18b.pdf'))">
+      <SourceType>Package</SourceType>
+      <SourceId>TaskManagement.API</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/TaskManagement.API</BasePath>
+      <RelativePath>uploads/fdc8d191-e61f-454a-a407-0367a9b0f18b.pdf</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>qrl92ijpae</Fingerprint>
+      <Integrity>iu8RB6til8u7sgRcvk9rQoS85AptcZWFBA0tJs3THWE=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\fdc8d191-e61f-454a-a407-0367a9b0f18b.pdf'))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\fee07e55-d1fa-4c29-9342-4040cd69bdb5.pdf'))">
       <SourceType>Package</SourceType>
       <SourceId>TaskManagement.API</SourceId>

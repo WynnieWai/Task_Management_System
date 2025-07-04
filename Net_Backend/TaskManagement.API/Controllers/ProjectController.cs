@@ -100,6 +100,22 @@ public class ProjectsController : ControllerBase
         project.Members = string.Join(",", dto.Members ?? new string[0]);
         // project.Tasks = string.Join(",", dto.Tasks ?? new string[0]);
 
+
+        // --- Remove non-project members from all tasks ---
+        var validMembers = new HashSet<string>(dto.Members ?? new string[0]);
+        foreach (var task in project.Tasks)
+        {
+            if (!string.IsNullOrWhiteSpace(task.Members))
+            {
+                var taskMembers = task.Members.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(m => m.Trim())
+                    .Where(m => validMembers.Contains(m))
+                    .ToArray();
+                task.Members = string.Join(",", taskMembers);
+            }
+        }
+            // -----------------------------------------------
+    
         await _context.SaveChangesAsync();
         return NoContent();
     }

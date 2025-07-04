@@ -97,15 +97,22 @@ namespace TaskManagement.API.Controllers
                 return BadRequest("User data is null.");
             }
 
+            // Get the next available UserId
+            var maxUserId = _context.Users.Any() 
+                ? _context.Users.Max(u => u.UserId) 
+                : 0;
+            var nextUserId = maxUserId + 1;
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                UserId = createUserDTO.UserId,
+                UserId = nextUserId,
                 Username = createUserDTO.Username,
                 PasswordHash = createUserDTO.Password,
-                Role = createUserDTO.Role
+                Role = createUserDTO.Role,
+                CreatedAt = DateTime.UtcNow
             };
-
+            Console.WriteLine("User CreatedAt: " + user.CreatedAt);
             _context.Users.Add(user);
             _context.SaveChanges();
 

@@ -10,6 +10,8 @@ namespace TaskManagement.API.Data
         public DbSet<Project> Projects { get; set; }
 
         public DbSet<TaskManagement.API.Models.Domain.Task> Tasks { get; set; }
-        public DbSet<Comment> Comments { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        
+        public DbSet<Notification> Notifications { get; set; }
     }
 }
