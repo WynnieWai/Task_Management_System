@@ -15,6 +15,29 @@ namespace TaskManagement.API.Models.Domain
         // public string Tasks { get; set; }   // Comma-separated: "Design UI,Setup Backend"
 
         public virtual ICollection<TaskManagement.API.Models.Domain.Task> Tasks { get; set; }
+        
+        // Helper method to add/remove members
+        public void AddMember(string username)
+        {
+            var members = string.IsNullOrEmpty(Members) 
+                ? new List<string>() 
+                : Members.Split(',').ToList();
+            
+            if (!members.Contains(username))
+            {
+                members.Add(username);
+                Members = string.Join(",", members);
+            }
+        }
 
+        public void RemoveMember(string username)
+        {
+            var members = string.IsNullOrEmpty(Members) 
+                ? new List<string>() 
+                : Members.Split(',').ToList();
+            
+            members.Remove(username);
+            Members = string.Join(",", members);
+        }
     }
 }

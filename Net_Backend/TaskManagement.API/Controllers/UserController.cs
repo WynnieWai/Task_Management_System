@@ -98,8 +98,8 @@ namespace TaskManagement.API.Controllers
             }
 
             // Get the next available UserId
-            var maxUserId = _context.Users.Any() 
-                ? _context.Users.Max(u => u.UserId) 
+            var maxUserId = _context.Users.Any()
+                ? _context.Users.Max(u => u.UserId)
                 : 0;
             var nextUserId = maxUserId + 1;
 
@@ -145,6 +145,29 @@ namespace TaskManagement.API.Controllers
         }
 
         // PUT: api/User/{id}
+        // [HttpPut("{userId:int}")]
+        // public IActionResult UpdateUserById([FromRoute] int userId, [FromBody] UpdateUserDTO updateUserDTO)
+        // {
+        //     var user = _context.Users.FirstOrDefault(u => u.UserId == userId);
+        //     if (user == null)
+        //         return NotFound();
+
+        //     // Update properties
+        //     user.Username = updateUserDTO.Username;
+        //     user.Role = updateUserDTO.Role;
+        //     _context.SaveChanges();
+
+        //     var userDto = new UserDTO
+        //     {
+        //         Id = user.Id,
+        //         UserId = user.UserId,
+        //         Username = user.Username,
+        //         Role = user.Role
+        //     };
+
+        //     return Ok(userDto);
+        // }
+
         [HttpPut("{userId:int}")]
         public IActionResult UpdateUserById([FromRoute] int userId, [FromBody] UpdateUserDTO updateUserDTO)
         {
@@ -152,9 +175,14 @@ namespace TaskManagement.API.Controllers
             if (user == null)
                 return NotFound();
 
-            // Update properties
+            // If role is being changed, use the special role update endpoint
+            if (user.Role != updateUserDTO.Role)
+            {
+                return UpdateUserRole(userId, new UpdateRoleDTO { NewRole = updateUserDTO.Role });
+            }
+
+            // Otherwise proceed with normal update
             user.Username = updateUserDTO.Username;
-            user.Role = updateUserDTO.Role;
             _context.SaveChanges();
 
             var userDto = new UserDTO
@@ -205,5 +233,208 @@ namespace TaskManagement.API.Controllers
 
             return Ok(new { message = $"User {user.Username} has been unlocked." });
         }
+
+        // [HttpPut("update-role/{userId:int}")]
+        // public IActionResult UpdateUserRole([FromRoute] int userId, [FromBody] UpdateRoleDTO updateRoleDTO)
+        // {
+        //     var user = _context.Users.FirstOrDefault(u => u.UserId == userId);
+        //     if (user == null)
+        //         return NotFound();
+
+        //     string oldRole = user.Role;
+        //     user.Role = updateRoleDTO.NewRole;
+
+        //     // Only remove from projects if changing from contributor to manager
+        //     if (oldRole == "Contributor" && updateRoleDTO.NewRole == "Manager")
+        //     {
+        //         // Get all projects where this user is a member
+        //         var projectsWithUser = _context.Projects
+        //             .Where(p => p.Members.Contains(user.Username))
+        //             .ToList();
+
+        //         foreach (var project in projectsWithUser)
+        //         {
+        //             // Remove user from members list
+        //             var membersList = project.Members.Split(',').ToList();
+        //             membersList.Remove(user.Username);
+        //             project.Members = string.Join(",", membersList);
+        //         }
+        //     }
+
+        //     _context.SaveChanges();
+
+        //     return Ok(new
+        //     {
+        //         Id = user.Id,
+        //         UserId = user.UserId,
+        //         Username = user.Username,
+        //         Role = user.Role,
+        //         Message = "Role updated successfully"
+        //     });
+        // }
+
+
+        // [HttpPut("update-role/{userId:int}")]
+        // public IActionResult UpdateUserRole([FromRoute] int userId, [FromBody] UpdateRoleDTO updateRoleDTO)
+        // {
+        //     var user = _context.Users.FirstOrDefault(u => u.UserId == userId);
+        //     if (user == null)
+        //         return NotFound();
+
+        //     string oldRole = user.Role;
+        //     user.Role = updateRoleDTO.NewRole;
+
+        //     // Remove from projects and tasks if changing from contributor to non-contributor role
+        //     if (oldRole == "Contributor" && updateRoleDTO.NewRole != "Contributor")
+        //     {
+        //         // Remove from project members
+        //         var projectsWithUser = _context.Projects
+        //             .Where(p => p.Members.Contains(user.Username))
+        //             .ToList();
+
+        //         foreach (var project in projectsWithUser)
+        //         {
+        //             var membersList = project.Members.Split(',').ToList();
+        //             membersList.Remove(user.Username);
+        //             project.Members = string.Join(",", membersList);
+        //             _context.Entry(project).State = EntityState.Modified;
+        //         }
+
+        //         // Remove from task members
+        //         var tasksWithUser = _context.Tasks
+        //             .Where(t => t.Members.Contains(user.Username))
+        //             .ToList();
+
+        //         foreach (var task in tasksWithUser)
+        //         {
+        //             var taskMembers = task.Members.Split(',').ToList();
+        //             taskMembers.Remove(user.Username);
+        //             task.Members = string.Join(",", taskMembers);
+        //             _context.Entry(task).State = EntityState.Modified;
+        //         }
+        //     }
+
+        //     _context.SaveChanges();
+
+        //     return Ok(new
+        //     {
+        //         Id = user.Id,
+        //         UserId = user.UserId,
+        //         Username = user.Username,
+        //         Role = user.Role,
+        //         Message = "Role updated successfully"
+        //     });
+        // }
+
+        // [HttpPut("update-role/{userId:int}")]
+        // public IActionResult UpdateUserRole([FromRoute] int userId, [FromBody] UpdateRoleDTO updateRoleDTO)
+        // {
+        //     var user = _context.Users.FirstOrDefault(u => u.UserId == userId);
+        //     if (user == null)
+        //         return NotFound();
+
+        //     string oldRole = user.Role;
+        //     user.Role = updateRoleDTO.NewRole;
+
+        //     // Remove from projects and tasks if changing from contributor to non-contributor role
+        //     if (oldRole == "Contributor" && updateRoleDTO.NewRole != "Contributor")
+        //     {
+        //         // Remove from project members
+        //         var projectsWithUser = _context.Projects
+        //             .Where(p => p.Members != null && p.Members.Contains(user.Username))
+        //             .ToList();
+
+        //         foreach (var project in projectsWithUser)
+        //         {
+        //             var membersList = project.Members.Split(',')
+        //                 .Select(m => m.Trim())
+        //                 .Where(m => !string.IsNullOrEmpty(m))
+        //                 .ToList();
+
+        //             membersList.Remove(user.Username);
+        //             project.Members = string.Join(",", membersList);
+        //             _context.Entry(project).State = EntityState.Modified;
+        //         }
+
+        //         // Remove from task members - this is the critical fix
+        //         var tasksWithUser = _context.Tasks
+        //             .Where(t => t.Members != null && t.Members.Contains(user.Username))
+        //             .ToList();
+
+        //         foreach (var task in tasksWithUser)
+        //         {
+        //             var taskMembers = task.Members.Split(',')
+        //                 .Select(m => m.Trim())
+        //                 .Where(m => !string.IsNullOrEmpty(m))
+        //                 .ToList();
+
+        //             taskMembers.Remove(user.Username);
+        //             task.Members = string.Join(",", taskMembers);
+        //             _context.Entry(task).State = EntityState.Modified;
+        //         }
+        //     }
+
+        //     _context.SaveChanges();
+
+        //     return Ok(new
+        //     {
+        //         Id = user.Id,
+        //         UserId = user.UserId,
+        //         Username = user.Username,
+        //         Role = user.Role,
+        //         Message = "Role updated successfully"
+        //     });
+        // }
+        
+        [HttpPut("update-role/{userId:int}")]
+        public IActionResult UpdateUserRole([FromRoute] int userId, [FromBody] UpdateRoleDTO updateRoleDTO)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.UserId == userId);
+            if (user == null)
+                return NotFound();
+
+            string oldRole = user.Role;
+            user.Role = updateRoleDTO.NewRole;
+
+            // Only remove from projects if changing from contributor to manager
+            if (oldRole == "Contributor" && updateRoleDTO.NewRole == "Manager")
+            {
+                // Get all projects where this user is a member
+                var projectsWithUser = _context.Projects
+                    .Where(p => p.Members.Contains(user.Username))
+                    .ToList();
+
+                foreach (var project in projectsWithUser)
+                {
+                    // Remove user from members list
+                    var membersList = project.Members.Split(',').ToList();
+                    membersList.Remove(user.Username);
+                    project.Members = string.Join(",", membersList);
+                }
+
+                var tasksWithUser = _context.Tasks
+                    .Where(t => t.Members.Contains(user.Username))
+                    .ToList();
+
+                foreach (var task in tasksWithUser)
+                {
+                    var membersTask = task.Members.Split(',').ToList();
+                    membersTask.Remove(user.Username);
+                    task.Members = string.Join(",", membersTask);
+                }
+            }
+
+            _context.SaveChanges();
+
+            return Ok(new
+            {
+                Id = user.Id,
+                UserId = user.UserId,
+                Username = user.Username,
+                Role = user.Role,
+                Message = "Role updated successfully"
+            });
+        }
     }
 }
+

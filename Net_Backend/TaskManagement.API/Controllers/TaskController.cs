@@ -542,6 +542,8 @@ public class TasksController : ControllerBase
         {
             id = p.Id,
             name = p.Title,
+            manager = p.Manager,
+            members = p.Members?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(m => m.Trim()).ToArray() ?? new string[0], // <-- Add this line
             tasks = (p.Tasks ?? new List<TaskManagement.API.Models.Domain.Task>()).Select(t => new
             {
                 id = t.Id,

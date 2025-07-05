@@ -1412,6 +1412,1115 @@
 //   );
 // }
 
+
+// Haven change role verison (mostly complete)
+// import React, { useState, useEffect, useRef } from "react";
+// import { CheckCircleIcon, LockClosedIcon } from '@heroicons/react/24/solid';
+// import {
+//   fetchUsers,
+//   addUser,
+//   editUser,
+//   deleteUser,
+//   lockUser,
+//   unlockUser,
+// } from "../API/UserAPI";
+
+// const roleOptions = ["Contributor", "Manager", "Admin"];
+
+// export default function UserManagement() {
+//   const [users, setUsers] = useState([]);
+//   const [editIndex, setEditIndex] = useState(null);
+//   const [editUserForm, setEditUserForm] = useState({ username: "", role: roleOptions[0] });
+//   const [addMode, setAddMode] = useState(false);
+//   const [newUser, setNewUser] = useState({ 
+//     username: "", 
+//     password: "", 
+//     role: roleOptions[0] 
+//   });
+//   const [error, setError] = useState("");
+//   const [selected, setSelected] = useState([]);
+//   const selectedAll = selected.length === users.length;
+
+//   const tableContainerRef = useRef(null);
+//   const addRowRef = useRef(null);
+
+//   // Check if we should disable other actions (when in edit mode or add mode)
+//   const disableActions = editIndex !== null || addMode;
+//   const disableAddButton = editIndex !== null || selected.length > 0;
+
+//   // Load users from API
+//   useEffect(() => {
+//     loadUsers();
+//   }, []);
+
+//   useEffect(() => {
+//     if (addMode && addRowRef.current) {
+//       setTimeout(() => {
+//         addRowRef.current.scrollIntoView({
+//           behavior: 'smooth',
+//           block: 'nearest'
+//         });
+//       }, 50);
+//     }
+//   }, [addMode]);
+
+//   const loadUsers = async () => {
+//     try {
+//       const data = await fetchUsers();
+//       const sortedUsers = data.sort((a, b) => a.userId - b.userId);
+//       setUsers(sortedUsers);
+//     } catch (err) {
+//       setError("Failed to fetch users: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   // const handleSelect = (idx) => {
+//   //   setSelected((prev) =>
+//   //     prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+//   //   );
+//   // };
+
+//   // const handleSelectAll = () => {
+//   //   if (selectedAll) setSelected([]);
+//   //   else setSelected(users.map((_, i) => i));
+//   // };
+
+//   // const handleSelect = (idx) => {
+//   //   if (editIndex !== null && editIndex === idx) return; // Disable selection for edited user
+//   //   setSelected((prev) =>
+//   //     prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+//   //   );
+//   // };
+
+//   // const handleSelectAll = () => {
+//   //   if (editIndex !== null) return; // Disable select all during edit mode
+//   //   if (selectedAll) setSelected([]);
+//   //   else setSelected(users.map((_, i) => i));
+//   // };
+
+//   const handleSelect = (idx) => {
+//     if (disableActions) return; // Disable selection when in edit/add mode
+//     setSelected((prev) =>
+//       prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+//     );
+//   };
+
+//   const handleSelectAll = () => {
+//     if (disableActions) return; // Disable select all when in edit/add mode
+//     if (selectedAll) setSelected([]);
+//     else setSelected(users.map((_, i) => i));
+//   };
+
+//   const handleBulkDelete = async () => {
+//     try {
+//       await Promise.all(
+//         selected.map(idx => deleteUser(users[idx].userId))
+//       );
+//       await loadUsers();
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to delete users: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleBulkEdit = () => {
+//     if (selected.length === 1) {
+//       const idx = selected[0];
+//       const selectedUser = users[idx];
+//       if (selectedUser.status === "Locked") {
+//         alert("This user is locked and cannot be edited.");
+//         return;
+//       }
+//       setEditIndex(idx);
+//       setEditUserForm({ ...selectedUser });
+//     }
+//   };
+
+//   const handleBulkSave = async () => {
+//     try {
+//       await editUser(users[editIndex].userId, {
+//         username: editUserForm.username,
+//         role: editUserForm.role
+//       });
+//       await loadUsers();
+//       setEditIndex(null);
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to update user: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleBulkCancel = () => {
+//     setEditIndex(null);
+//   };
+
+//   const handleBulkLock = async () => {
+//     try {
+//       await Promise.all(
+//         selected.map(idx => lockUser(users[idx].userId))
+//       );
+//       await loadUsers();
+//       window.dispatchEvent(new Event('userStatusChanged'));
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to lock users: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleBulkUnlock = async () => {
+//     try {
+//       await Promise.all(
+//         selected.map(idx => unlockUser(users[idx].userId))
+//       );
+//       await loadUsers();
+//       window.dispatchEvent(new Event('userStatusChanged'));
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to unlock users: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleEdit = (idx) => {
+//     setEditIndex(idx);
+//     setEditUserForm(users[idx]);
+//   };
+
+//   const handleDelete = async (idx) => {
+//     try {
+//       await deleteUser(users[idx].userId);
+//       await loadUsers();
+//       if (editIndex === idx) setEditIndex(null);
+//     } catch (err) {
+//       setError("Failed to delete user: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setEditUserForm((prev) => ({ ...prev, [name]: value }));
+//   };
+
+//   const handleSave = async (idx) => {
+//     try {
+//       await editUser(users[idx].userId, {
+//         username: editUserForm.username,
+//         role: editUserForm.role
+//       });
+//       await loadUsers();
+//       setEditIndex(null);
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to update user: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleCancel = () => {
+//     setEditIndex(null);
+//   };
+
+//   const handleAddChange = (e) => {
+//     const { name, value } = e.target;
+//     setNewUser((prev) => ({ ...prev, [name]: value }));
+//   };
+
+//   const handleAddUser = async () => {
+//     if (!newUser.username || !newUser.password) {
+//       setError("Username and password are required");
+//       return;
+//     }
+    
+//     try {
+//       await addUser({
+//         username: newUser.username,
+//         password: newUser.password,
+//         role: newUser.role
+//       });
+//       setNewUser({ username: "", password: "", role: roleOptions[0] });
+//       setAddMode(false);
+//       await loadUsers();
+//     } catch (err) {
+//       setError("Failed to add user: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleCancelAdd = () => {
+//     setNewUser({ username: "", password: "", role: roleOptions[0] });
+//     setAddMode(false);
+//   };
+
+//   const handleToggleLock = async (idx) => {
+//     const user = users[idx];
+//     try {
+//       if (user.status === "Active") {
+//         await lockUser(user.userId);
+//       } else {
+//         await unlockUser(user.userId);
+//       }
+//       await loadUsers();
+//     } catch (err) {
+//       setError("Failed to toggle lock: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   return (
+//     <div className="p-8 flex flex-col h-[calc(100vh-4rem)]">
+//       <div>
+//         <h1 className="text-3xl font-bold mb-6">User Management</h1>
+//         {error && <div className="text-red-500 mb-4">{error}</div>}
+        
+//         <button
+//           // className="mb-8 bg-mycustomblue text-white font-medium px-4 py-2 rounded"
+//           // onClick={() => setAddMode(true)}
+//           className={`mb-8 bg-mycustomblue text-white font-medium px-4 py-2 rounded ${
+//             disableAddButton ? 'cursor-not-allowed' : ''
+//           }`}
+//           onClick={() => !disableAddButton && setAddMode(true)}
+//           disabled={disableAddButton}
+//         >
+//           Add New User
+//         </button>
+//       </div>
+//       {/* Bulk action bar */}
+//       {selected.length > 0 && (
+//         <div className="bg-white border rounded mb-2 px-4 py-2 flex items-center justify-between shadow-sm">
+//           <span className="text-xs text-gray-800">SELECTED: {selected.length}</span>
+//           <div className="flex gap-2">
+//             {editIndex === null ? (
+//               <>
+//                 {selected.length === 1 && (
+//                   <button onClick={handleBulkEdit} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>EDIT</button>
+//                 )}
+//                 <button onClick={handleBulkDelete} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>DELETE</button>
+//                 <button onClick={handleBulkLock} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>LOCK</button>
+//                 <button onClick={handleBulkUnlock} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>UNLOCK</button>
+//                 <button onClick={() => setSelected([])} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>CANCEL</button>
+//               </>
+//             ) : (
+//               <>
+//                 <button onClick={handleBulkSave} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs">SAVE</button>
+//                 <button onClick={handleBulkCancel} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs">CANCEL</button>
+//               </>
+//             )}
+//           </div>
+//         </div>
+//       )}
+
+//       <div className="flex-1 overflow-hidden">
+//         <div className="overflow-y-auto h-full">
+//           <table className="w-full bg-white border whitespace-nowrap">
+//             <thead className="sticky top-0 bg-white z-10">
+//               <tr>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold w-12">
+//                   <input 
+//                     type="checkbox" 
+//                     checked={selectedAll} 
+//                     onChange={handleSelectAll} 
+//                     disabled={disableActions}
+//                   />
+//                 </th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold w-16">ID</th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold min-w-[150px] max-w-[200px]">Username</th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold min-w-[150px]">Role</th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold w-32">Status</th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold min-w-[250px]">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody> 
+//               {users.map((user, idx) => (
+//                 <tr key={idx} className={selected.includes(idx) ? "bg-green-50" : ""}>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     <input
+//                       type="checkbox"
+//                       checked={selected.includes(idx)}
+//                       onChange={() => handleSelect(idx)}
+//                       // disabled={editIndex !== null && editIndex !== idx}
+//                       disabled={disableActions}
+//                     />
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">{idx + 1}</td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     {editIndex === idx ? (
+//                       <input
+//                         className="border px-2 py-1 rounded w-full"
+//                         name="username"
+//                         value={editUserForm.username}
+//                         onChange={handleChange}
+//                       />
+//                     ) : (
+//                       user.username
+//                     )}
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     {editIndex === idx ? (
+//                       <select
+//                         className="border px-2 py-1 rounded w-full"
+//                         name="role"
+//                         value={editUserForm.role}
+//                         onChange={handleChange}
+//                       >
+//                         {roleOptions.map((role) => (
+//                           <option key={role} value={role}>{role}</option>
+//                         ))}
+//                       </select>
+//                     ) : (
+//                       user.role
+//                     )}
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     {user.status === "Locked" ? (
+//                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-800">
+//                         <LockClosedIcon className="h-4 w-4" />
+//                         Locked
+//                       </span>
+//                     ) : (
+//                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+//                         <CheckCircleIcon className="h-4 w-4" />
+//                         Active
+//                       </span>
+//                     )}
+//                   </td>
+//                   <td className="border px-4 py-2 text-xs font-medium">
+//                     {editIndex === idx ? (
+//                       <>
+//                         <button
+//                           className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+//                           onClick={() => handleSave(idx)}
+//                         >
+//                           SAVE
+//                         </button>
+//                         <button
+//                           className="bg-gray-400 text-white px-2 py-1 rounded"
+//                           onClick={handleCancel}
+//                         >
+//                           CANCEL
+//                         </button>
+//                       </>
+//                     ) : (
+//                       <>
+//                         <button
+//                           // className="bg-yellow-400 px-2 py-1 rounded mr-2"
+//                           // onClick={() => handleEdit(idx)}
+//                           // disabled={user.status === "Locked"}
+//                           className={`bg-yellow-400 px-2 py-1 rounded mr-2 ${
+//                             disableActions ? 'cursor-not-allowed' : ''
+//                           }`}
+//                           onClick={() => !disableActions && handleEdit(idx)}
+//                           disabled={disableActions || user.status === "Locked"}
+//                         >
+//                           EDIT
+//                         </button>
+//                         <button
+//                           // className="bg-red-500 text-white px-2 py-1 rounded mr-2"
+//                           // onClick={() => handleDelete(idx)}
+//                           className={`bg-red-500 text-white px-2 py-1 rounded mr-2 ${
+//                             disableActions ? 'cursor-not-allowed' : ''
+//                           }`}
+//                           onClick={() => !disableActions && handleDelete(idx)}
+//                           disabled={disableActions}
+//                         >
+//                           DELETE
+//                         </button>
+//                         <button
+//                           // className={`px-2 py-1 rounded text-white ${
+//                           //   user.status === "Locked" ? "bg-green-500" : "bg-gray-500"
+//                           // }`}
+//                           // onClick={() => handleToggleLock(idx)}
+//                           className={`px-2 py-1 rounded text-white ${
+//                             user.status === "Locked" ? "bg-green-500" : "bg-gray-500"
+//                           } ${
+//                             disableActions ? 'cursor-not-allowed' : ''
+//                           }`}
+//                           onClick={() => !disableActions && handleToggleLock(idx)}
+//                           disabled={disableActions}
+//                         >
+//                           {user.status === "Locked" ? "UNLOCK" : "LOCK"}
+//                         </button>
+//                       </>
+//                     )}
+//                   </td>
+//                 </tr>
+//               ))}
+
+//               {addMode && (
+//                 <tr ref={addRowRef} className="bg-yellow-50">
+//                   <td className="border px-4 py-2 text-sm font-normal"></td>
+//                   <td className="border px-4 py-2 text-sm font-normal">{users.length + 1}</td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     <input
+//                       className="border px-2 py-1 rounded w-full"
+//                       name="username"
+//                       value={newUser.username}
+//                       onChange={handleAddChange}
+//                       placeholder="Username"
+//                     />
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     <select
+//                       className="border px-2 py-1 rounded w-full"
+//                       name="role"
+//                       value={newUser.role}
+//                       onChange={handleAddChange}
+//                     >
+//                       {roleOptions.map((role) => (
+//                         <option key={role} value={role}>{role}</option>
+//                       ))}
+//                     </select>
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+//                       <CheckCircleIcon className="h-4 w-4" />
+//                       Active
+//                     </span>
+//                   </td>
+//                   <td className="border px-4 py-2 text-xs font-medium">
+//                     <input
+//                       className="border px-2 py-1 rounded mr-2"
+//                       name="password"
+//                       type="password"
+//                       value={newUser.password}
+//                       onChange={handleAddChange}
+//                       placeholder="Password"
+//                     />
+//                     <button
+//                       className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+//                       onClick={handleAddUser}
+//                     >
+//                       ADD
+//                     </button>
+//                     <button
+//                       className="bg-gray-400 text-white px-2 py-1 rounded"
+//                       onClick={handleCancelAdd}
+//                     >
+//                       CANCEL
+//                     </button>
+//                   </td>
+//                 </tr>
+//               )}
+//             </tbody>
+//           </table>
+//           </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// Latest Version
+// import React, { useState, useEffect, useRef } from "react";
+// import { CheckCircleIcon, LockClosedIcon } from '@heroicons/react/24/solid';
+// import {
+//   fetchUsers,
+//   addUser,
+//   editUser,
+//   deleteUser,
+//   lockUser,
+//   unlockUser,
+// } from "../API/UserAPI";
+
+// const roleOptions = ["Contributor", "Manager", "Admin"];
+
+// export default function UserManagement() {
+//   const [users, setUsers] = useState([]);
+//   const [editIndex, setEditIndex] = useState(null);
+//   const [editUserForm, setEditUserForm] = useState({ username: "", role: roleOptions[0] });
+//   const [addMode, setAddMode] = useState(false);
+//   const [newUser, setNewUser] = useState({ 
+//     username: "", 
+//     password: "", 
+//     role: roleOptions[0] 
+//   });
+//   const [error, setError] = useState("");
+//   const [selected, setSelected] = useState([]);
+//   const selectedAll = selected.length === users.length;
+
+//   const tableContainerRef = useRef(null);
+//   const addRowRef = useRef(null);
+
+//   const disableActions = editIndex !== null || addMode;
+//   const disableAddButton = editIndex !== null || selected.length > 0;
+
+//   useEffect(() => {
+//     loadUsers();
+//   }, []);
+
+//   useEffect(() => {
+//     if (addMode && addRowRef.current) {
+//       setTimeout(() => {
+//         addRowRef.current.scrollIntoView({
+//           behavior: 'smooth',
+//           block: 'nearest'
+//         });
+//       }, 50);
+//     }
+//   }, [addMode]);
+
+//   const loadUsers = async () => {
+//     try {
+//       const data = await fetchUsers();
+//       const sortedUsers = data.sort((a, b) => a.userId - b.userId);
+//       setUsers(sortedUsers);
+//     } catch (err) {
+//       setError("Failed to fetch users: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleSelect = (idx) => {
+//     if (disableActions) return;
+//     setSelected((prev) =>
+//       prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+//     );
+//   };
+
+//   const handleSelectAll = () => {
+//     if (disableActions) return;
+//     if (selectedAll) setSelected([]);
+//     else setSelected(users.map((_, i) => i));
+//   };
+
+//   const handleBulkDelete = async () => {
+//     try {
+//       await Promise.all(
+//         selected.map(idx => deleteUser(users[idx].userId))
+//       );
+//       await loadUsers();
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to delete users: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleBulkEdit = () => {
+//     if (selected.length === 1) {
+//       const idx = selected[0];
+//       const selectedUser = users[idx];
+//       if (selectedUser.status === "Locked") {
+//         alert("This user is locked and cannot be edited.");
+//         return;
+//       }
+//       setEditIndex(idx);
+//       setEditUserForm({ ...selectedUser });
+//     }
+//   };
+
+//   const handleBulkSave = async () => {
+//     try {
+//       const userToUpdate = users[editIndex];
+//       const updateData = {
+//         username: editUserForm.username,
+//         role: userToUpdate.role === "Admin" ? "Admin" : editUserForm.role
+//       };
+//       await editUser(userToUpdate.userId, updateData);
+//       await loadUsers();
+//       setEditIndex(null);
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to update user: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleBulkCancel = () => {
+//     setEditIndex(null);
+//   };
+
+//   // const handleBulkLock = async () => {
+//   //   try {
+//   //     await Promise.all(
+//   //       selected.map(idx => lockUser(users[idx].userId))
+//   //     );
+//   //     await loadUsers();
+//   //     window.dispatchEvent(new Event('userStatusChanged'));
+//   //     setSelected([]);
+//   //   } catch (err) {
+//   //     setError("Failed to lock users: " + (err.response?.data || err.message));
+//   //   }
+//   // };
+
+//   const handleBulkLock = async () => {
+//     try {
+//       // Check if we're trying to lock all remaining active admins
+//       const selectedAdmins = users.filter((user, idx) => 
+//         selected.includes(idx) && 
+//         user.role === "Admin" && 
+//         user.status === "Active"
+//       );
+      
+//       const otherActiveAdmins = users.filter((user, idx) => 
+//         !selected.includes(idx) && 
+//         user.role === "Admin" && 
+//         user.status === "Active"
+//       );
+      
+//       if (selectedAdmins.length > 0 && otherActiveAdmins.length === 0) {
+//         setError("Cannot lock all admin users - at least one admin must remain active");
+//         return;
+//       }
+
+//       await Promise.all(
+//         selected.map(idx => {
+//           const user = users[idx];
+//           // Skip if this would lock the last admin
+//           if (user.role === "Admin" && user.status === "Active" && otherActiveAdmins.length === 0) {
+//             return Promise.resolve(); // Skip this lock
+//           }
+//           return lockUser(user.userId);
+//         })
+//       );
+      
+//       await loadUsers();
+//       window.dispatchEvent(new Event('userStatusChanged'));
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to lock users: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleBulkUnlock = async () => {
+//     try {
+//       await Promise.all(
+//         selected.map(idx => unlockUser(users[idx].userId))
+//       );
+//       await loadUsers();
+//       window.dispatchEvent(new Event('userStatusChanged'));
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to unlock users: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleEdit = (idx) => {
+//     setEditIndex(idx);
+//     setEditUserForm(users[idx]);
+//   };
+
+//   const handleDelete = async (idx) => {
+//     try {
+//       await deleteUser(users[idx].userId);
+//       await loadUsers();
+//       if (editIndex === idx) setEditIndex(null);
+//     } catch (err) {
+//       setError("Failed to delete user: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setEditUserForm((prev) => ({ ...prev, [name]: value }));
+//   };
+
+//   const handleSave = async (idx) => {
+//     try {
+//       const userToUpdate = users[idx];
+//       const updateData = {
+//         username: editUserForm.username,
+//         role: userToUpdate.role === "Admin" ? "Admin" : editUserForm.role
+//       };
+//       await editUser(userToUpdate.userId, updateData);
+//       await loadUsers();
+//       setEditIndex(null);
+//       setSelected([]);
+//     } catch (err) {
+//       setError("Failed to update user: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleCancel = () => {
+//     setEditIndex(null);
+//   };
+
+//   const handleAddChange = (e) => {
+//     const { name, value } = e.target;
+//     setNewUser((prev) => ({ ...prev, [name]: value }));
+//   };
+
+//   // const handleAddUser = async () => {
+//   //   if (!newUser.username || !newUser.password) {
+//   //     setError("Username and password are required");
+//   //     return;
+//   //   }
+    
+//   //   try {
+//   //     await addUser({
+//   //       username: newUser.username,
+//   //       password: newUser.password,
+//   //       role: newUser.role
+//   //     });
+//   //     setNewUser({ username: "", password: "", role: roleOptions[0] });
+//   //     setAddMode(false);
+//   //     await loadUsers();
+//   //   } catch (err) {
+//   //     setError("Failed to add user: " + (err.response?.data || err.message));
+//   //   }
+//   // };
+
+//   const handleAddUser = async () => {
+//     // Check for empty fields
+//     if (!newUser.username) {
+//       alert("Username is required");
+//       return;
+//     }
+
+//     if (!newUser.password) {
+//       alert("Password is required");
+//       return;
+//     }
+
+//     // Check password length
+//     if (newUser.password.length < 6) {
+//       alert("Password must be at least 6 characters");
+//       return;
+//     }
+
+//     // Check for existing username
+//     const usernameExists = users.some(
+//       user => user.username.toLowerCase() === newUser.username.toLowerCase()
+//     );
+    
+//     if (usernameExists) {
+//       alert("Username already exists");
+//       return;
+//     }
+
+//     try {
+//       await addUser({
+//         username: newUser.username,
+//         password: newUser.password,
+//         role: newUser.role
+//       });
+//       setNewUser({ username: "", password: "", role: roleOptions[0] });
+//       setAddMode(false);
+//       await loadUsers();
+//     } catch (err) {
+//       setError("Failed to add user: " + (err.response?.data || err.message));
+//     }
+//   };
+
+//   const handleCancelAdd = () => {
+//     setNewUser({ username: "", password: "", role: roleOptions[0] });
+//     setAddMode(false);
+//   };
+
+//   // const handleToggleLock = async (idx) => {
+//   //   const user = users[idx];
+//   //   try {
+//   //     if (user.status === "Active") {
+//   //       await lockUser(user.userId);
+//   //     } else {
+//   //       await unlockUser(user.userId);
+//   //     }
+//   //     await loadUsers();
+//   //   } catch (err) {
+//   //     setError("Failed to toggle lock: " + (err.response?.data || err.message));
+//   //   }
+//   // };
+
+//   const handleToggleLock = async (idx) => {
+//     const user = users[idx];
+    
+//     // Prevent locking if this is the last active admin
+//     if (user.status === "Active" && user.role === "Admin") {
+//       const activeAdmins = users.filter(u => 
+//         u.role === "Admin" && u.status === "Active" && u.userId !== user.userId
+//       );
+      
+//       if (activeAdmins.length === 0) {
+//         alert("Cannot lock the last active admin user");
+//         return;
+//       }
+//     }
+
+//     try {
+//       if (user.status === "Active") {
+//         await lockUser(user.userId);
+//       } else {
+//         await unlockUser(user.userId);
+//       }
+//       await loadUsers();
+//     } catch (err) {
+//       setError("Failed to toggle lock: " + (err.response?.data || err.message));
+//     }
+//   };
+  
+//   const isLastActiveAdmin = (user) => {
+//     if (user.role !== "Admin" || user.status === "Locked") return false;
+//     return users.filter(u => 
+//       u.role === "Admin" && u.status === "Active" && u.userId !== user.userId
+//     ).length === 0;
+//   };
+
+//   const isLockingAllAdmins = (selectedIndices) => {
+//     const selectedAdmins = users.filter((user, idx) => 
+//       selectedIndices.includes(idx) && 
+//       user.role === "Admin" && 
+//       user.status === "Active"
+//     );
+    
+//     const otherActiveAdmins = users.filter((user, idx) => 
+//       !selectedIndices.includes(idx) && 
+//       user.role === "Admin" && 
+//       user.status === "Active"
+//     );
+    
+//     return selectedAdmins.length > 0 && otherActiveAdmins.length === 0;
+//   };
+
+//   return (
+//     <div className="p-8 flex flex-col h-[calc(100vh-4rem)]">
+//       <div>
+//         <h1 className="text-3xl font-bold mb-6">User Management</h1>
+//         {error && <div className="text-red-500 mb-4">{error}</div>}
+        
+//         <button
+//           className={`mb-8 bg-mycustomblue text-white font-medium px-4 py-2 rounded ${
+//             disableAddButton ? 'cursor-not-allowed' : ''
+//           }`}
+//           onClick={() => !disableAddButton && setAddMode(true)}
+//           disabled={disableAddButton}
+//         >
+//           Add New User
+//         </button>
+//       </div>
+
+//       {selected.length > 0 && (
+//         <div className="bg-white border rounded mb-2 px-4 py-2 flex items-center justify-between shadow-sm">
+//           <span className="text-xs text-gray-800">SELECTED: {selected.length}</span>
+//           <div className="flex gap-2">
+//             {editIndex === null ? (
+//               <>
+//                 {selected.length === 1 && (
+//                   <button onClick={handleBulkEdit} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>EDIT</button>
+//                 )}
+//                 <button onClick={handleBulkDelete} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>DELETE</button>
+//                 {/* <button onClick={handleBulkLock} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>LOCK</button> */}
+//                 <button 
+//                   onClick={handleBulkLock} 
+//                   className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" 
+//                   disabled={disableActions || isLockingAllAdmins(selected)}
+//                   title={isLockingAllAdmins(selected) ? "Cannot lock all admin users" : ""}
+//                 >
+//                   LOCK
+//                 </button>
+//                 <button onClick={handleBulkUnlock} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>UNLOCK</button>
+//                 <button onClick={() => setSelected([])} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>CANCEL</button>
+//               </>
+//             ) : (
+//               <>
+//                 <button onClick={handleBulkSave} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs">SAVE</button>
+//                 <button onClick={handleBulkCancel} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs">CANCEL</button>
+//               </>
+//             )}
+//           </div>
+//         </div>
+//       )}
+
+//       <div className="flex-1 overflow-hidden">
+//         <div className="overflow-y-auto h-full">
+//           <table className="w-full bg-white border whitespace-nowrap">
+//             <thead className="sticky top-0 bg-white z-10">
+//               <tr>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold w-12">
+//                   <input 
+//                     type="checkbox" 
+//                     checked={selectedAll} 
+//                     onChange={handleSelectAll} 
+//                     disabled={disableActions}
+//                   />
+//                 </th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold w-16">ID</th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold min-w-[150px] max-w-[200px]">Username</th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold min-w-[150px]">Role</th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold w-32">Status</th>
+//                 <th className="border px-4 py-2 text-left text-sm font-semibold min-w-[250px]">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody> 
+//               {users.map((user, idx) => (
+//                 <tr key={idx} className={selected.includes(idx) ? "bg-green-50" : ""}>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     <input
+//                       type="checkbox"
+//                       checked={selected.includes(idx)}
+//                       onChange={() => handleSelect(idx)}
+//                       disabled={disableActions}
+//                     />
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">{idx + 1}</td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     {editIndex === idx ? (
+//                       <input
+//                         className="border px-2 py-1 rounded w-full"
+//                         name="username"
+//                         value={editUserForm.username}
+//                         onChange={handleChange}
+//                       />
+//                     ) : (
+//                       user.username
+//                     )}
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     {editIndex === idx ? (
+//                       user.role === "Admin" ? (
+//                         <div className="flex items-center">
+//                           <span>Admin</span>
+//                           <span className="text-xs text-gray-500 ml-2">(cannot be changed)</span>
+//                         </div>
+//                       ) : (
+//                         <select
+//                           className="border px-2 py-1 rounded w-full"
+//                           name="role"
+//                           value={editUserForm.role}
+//                           onChange={handleChange}
+//                         >
+//                           {roleOptions.filter(role => role !== "Admin").map((role) => (
+//                             <option key={role} value={role}>{role}</option>
+//                           ))}
+//                         </select>
+//                       )
+//                     ) : (
+//                       user.role
+//                     )}
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     {user.status === "Locked" ? (
+//                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-800">
+//                         <LockClosedIcon className="h-4 w-4" />
+//                         Locked
+//                       </span>
+//                     ) : (
+//                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+//                         <CheckCircleIcon className="h-4 w-4" />
+//                         Active
+//                       </span>
+//                     )}
+//                   </td>
+//                   <td className="border px-4 py-2 text-xs font-medium">
+//                     {editIndex === idx ? (
+//                       <>
+//                         <button
+//                           className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+//                           onClick={() => handleSave(idx)}
+//                         >
+//                           SAVE
+//                         </button>
+//                         <button
+//                           className="bg-gray-400 text-white px-2 py-1 rounded"
+//                           onClick={handleCancel}
+//                         >
+//                           CANCEL
+//                         </button>
+//                       </>
+//                     ) : (
+//                       <>
+//                         <button
+//                           className={`bg-yellow-400 px-2 py-1 rounded mr-2 ${
+//                             disableActions || user.status === "Locked" ? 'cursor-not-allowed' : ''
+//                           }`}
+//                           onClick={() => !disableActions && user.status !== "Locked" && handleEdit(idx)}
+//                           disabled={disableActions || user.status === "Locked"}
+//                         >
+//                           EDIT
+//                         </button>
+//                         <button
+//                           className={`bg-red-500 text-white px-2 py-1 rounded mr-2 ${
+//                             disableActions ? 'cursor-not-allowed' : ''
+//                           }`}
+//                           onClick={() => !disableActions && handleDelete(idx)}
+//                           disabled={disableActions}
+//                         >
+//                           DELETE
+//                         </button>
+//                         {/* <button
+//                           className={`px-2 py-1 rounded text-white ${
+//                             user.status === "Locked" ? "bg-green-500" : "bg-gray-500"
+//                           } ${
+//                             disableActions ? 'cursor-not-allowed' : ''
+//                           }`}
+//                           onClick={() => !disableActions && handleToggleLock(idx)}
+//                           disabled={disableActions}
+//                         >
+//                           {user.status === "Locked" ? "UNLOCK" : "LOCK"}
+//                         </button> */}
+//                         <button
+//                           className={`px-2 py-1 rounded text-white ${
+//                             user.status === "Locked" ? "bg-green-500" : "bg-gray-500"
+//                           } ${
+//                             disableActions || (user.role === "Admin" && isLastActiveAdmin(user)) ? 'cursor-not-allowed' : ''
+//                           }`}
+//                           onClick={() => !disableActions && !isLastActiveAdmin(user) && handleToggleLock(idx)}
+//                           disabled={disableActions || (user.role === "Admin" && isLastActiveAdmin(user))}
+//                           title={user.role === "Admin" && isLastActiveAdmin(user) ? "Cannot lock last admin" : ""}
+//                         >
+//                           {user.status === "Locked" ? "UNLOCK" : "LOCK"}
+//                         </button>
+//                       </>
+//                     )}
+//                   </td>
+//                 </tr>
+//               ))}
+
+//               {addMode && (
+//                 <tr ref={addRowRef} className="bg-yellow-50">
+//                   <td className="border px-4 py-2 text-sm font-normal"></td>
+//                   <td className="border px-4 py-2 text-sm font-normal">{users.length + 1}</td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     <input
+//                       className="border px-2 py-1 rounded w-full"
+//                       name="username"
+//                       value={newUser.username}
+//                       onChange={handleAddChange}
+//                       placeholder="Username"
+//                     />
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     <select
+//                       className="border px-2 py-1 rounded w-full"
+//                       name="role"
+//                       value={newUser.role}
+//                       onChange={handleAddChange}
+//                     >
+//                       {roleOptions.map((role) => (
+//                         <option key={role} value={role}>{role}</option>
+//                       ))}
+//                     </select>
+//                   </td>
+//                   <td className="border px-4 py-2 text-sm font-normal">
+//                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+//                       <CheckCircleIcon className="h-4 w-4" />
+//                       Active
+//                     </span>
+//                   </td>
+//                   <td className="border px-4 py-2 text-xs font-medium">
+//                     <input
+//                       className="border px-2 py-1 rounded mr-2"
+//                       name="password"
+//                       type="password"
+//                       value={newUser.password}
+//                       onChange={handleAddChange}
+//                       placeholder="Password (min 6 characters)"
+//                     />
+//                     <button
+//                       className="bg-green-500 text-white px-2 py-1 rounded mr-2"
+//                       onClick={handleAddUser}
+//                     >
+//                       ADD
+//                     </button>
+//                     <button
+//                       className="bg-gray-400 text-white px-2 py-1 rounded"
+//                       onClick={handleCancelAdd}
+//                     >
+//                       CANCEL
+//                     </button>
+//                   </td>
+//                 </tr>
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+// Debugging (4/7)
 import React, { useState, useEffect, useRef } from "react";
 import { CheckCircleIcon, LockClosedIcon } from '@heroicons/react/24/solid';
 import {
@@ -1442,11 +2551,9 @@ export default function UserManagement() {
   const tableContainerRef = useRef(null);
   const addRowRef = useRef(null);
 
-  // Check if we should disable other actions (when in edit mode or add mode)
   const disableActions = editIndex !== null || addMode;
   const disableAddButton = editIndex !== null || selected.length > 0;
 
-  // Load users from API
   useEffect(() => {
     loadUsers();
   }, []);
@@ -1472,39 +2579,15 @@ export default function UserManagement() {
     }
   };
 
-  // const handleSelect = (idx) => {
-  //   setSelected((prev) =>
-  //     prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
-  //   );
-  // };
-
-  // const handleSelectAll = () => {
-  //   if (selectedAll) setSelected([]);
-  //   else setSelected(users.map((_, i) => i));
-  // };
-
-  // const handleSelect = (idx) => {
-  //   if (editIndex !== null && editIndex === idx) return; // Disable selection for edited user
-  //   setSelected((prev) =>
-  //     prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
-  //   );
-  // };
-
-  // const handleSelectAll = () => {
-  //   if (editIndex !== null) return; // Disable select all during edit mode
-  //   if (selectedAll) setSelected([]);
-  //   else setSelected(users.map((_, i) => i));
-  // };
-
   const handleSelect = (idx) => {
-    if (disableActions) return; // Disable selection when in edit/add mode
+    if (disableActions) return;
     setSelected((prev) =>
       prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
     );
   };
 
   const handleSelectAll = () => {
-    if (disableActions) return; // Disable select all when in edit/add mode
+    if (disableActions) return;
     if (selectedAll) setSelected([]);
     else setSelected(users.map((_, i) => i));
   };
@@ -1534,12 +2617,40 @@ export default function UserManagement() {
     }
   };
 
+  // const handleBulkSave = async () => {
+  //   try {
+  //     const userToUpdate = users[editIndex];
+  //     const updateData = {
+  //       username: editUserForm.username,
+  //       role: userToUpdate.role === "Admin" ? "Admin" : editUserForm.role
+  //     };
+  //     await editUser(userToUpdate.userId, updateData);
+  //     await loadUsers();
+  //     setEditIndex(null);
+  //     setSelected([]);
+  //   } catch (err) {
+  //     setError("Failed to update user: " + (err.response?.data || err.message));
+  //   }
+  // };
+
+  // Modify the handleBulkSave function (bulk edit)
   const handleBulkSave = async () => {
     try {
-      await editUser(users[editIndex].userId, {
+      const userToUpdate = users[editIndex];
+      const oldRole = userToUpdate.role;
+      const updateData = {
         username: editUserForm.username,
-        role: editUserForm.role
-      });
+        role: userToUpdate.role === "Admin" ? "Admin" : editUserForm.role
+      };
+      
+      await editUser(userToUpdate.userId, updateData);
+      
+      // Handle role change side effects
+      if (updateData.role !== oldRole) {
+        await handleRoleChangeSideEffects(userToUpdate.userId, updateData.role, oldRole);
+        window.dispatchEvent(new Event('userRoleChanged'));
+      }
+      
       await loadUsers();
       setEditIndex(null);
       setSelected([]);
@@ -1552,11 +2663,50 @@ export default function UserManagement() {
     setEditIndex(null);
   };
 
+  // const handleBulkLock = async () => {
+  //   try {
+  //     await Promise.all(
+  //       selected.map(idx => lockUser(users[idx].userId))
+  //     );
+  //     await loadUsers();
+  //     window.dispatchEvent(new Event('userStatusChanged'));
+  //     setSelected([]);
+  //   } catch (err) {
+  //     setError("Failed to lock users: " + (err.response?.data || err.message));
+  //   }
+  // };
+
   const handleBulkLock = async () => {
     try {
-      await Promise.all(
-        selected.map(idx => lockUser(users[idx].userId))
+      // Check if we're trying to lock all remaining active admins
+      const selectedAdmins = users.filter((user, idx) => 
+        selected.includes(idx) && 
+        user.role === "Admin" && 
+        user.status === "Active"
       );
+      
+      const otherActiveAdmins = users.filter((user, idx) => 
+        !selected.includes(idx) && 
+        user.role === "Admin" && 
+        user.status === "Active"
+      );
+      
+      if (selectedAdmins.length > 0 && otherActiveAdmins.length === 0) {
+        setError("Cannot lock all admin users - at least one admin must remain active");
+        return;
+      }
+
+      await Promise.all(
+        selected.map(idx => {
+          const user = users[idx];
+          // Skip if this would lock the last admin
+          if (user.role === "Admin" && user.status === "Active" && otherActiveAdmins.length === 0) {
+            return Promise.resolve(); // Skip this lock
+          }
+          return lockUser(user.userId);
+        })
+      );
+      
       await loadUsers();
       window.dispatchEvent(new Event('userStatusChanged'));
       setSelected([]);
@@ -1598,12 +2748,40 @@ export default function UserManagement() {
     setEditUserForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // const handleSave = async (idx) => {
+  //   try {
+  //     const userToUpdate = users[idx];
+  //     const updateData = {
+  //       username: editUserForm.username,
+  //       role: userToUpdate.role === "Admin" ? "Admin" : editUserForm.role
+  //     };
+  //     await editUser(userToUpdate.userId, updateData);
+  //     await loadUsers();
+  //     setEditIndex(null);
+  //     setSelected([]);
+  //   } catch (err) {
+  //     setError("Failed to update user: " + (err.response?.data || err.message));
+  //   }
+  // };
+
+  // Modify the handleSave function (single edit)
   const handleSave = async (idx) => {
     try {
-      await editUser(users[idx].userId, {
+      const userToUpdate = users[idx];
+      const oldRole = userToUpdate.role;
+      const updateData = {
         username: editUserForm.username,
-        role: editUserForm.role
-      });
+        role: userToUpdate.role === "Admin" ? "Admin" : editUserForm.role
+      };
+      
+      await editUser(userToUpdate.userId, updateData);
+      
+      // Handle role change side effects
+      if (updateData.role !== oldRole) {
+        await handleRoleChangeSideEffects(userToUpdate.userId, updateData.role, oldRole);
+        window.dispatchEvent(new Event('userRoleChanged'));
+      }
+      
       await loadUsers();
       setEditIndex(null);
       setSelected([]);
@@ -1621,12 +2799,112 @@ export default function UserManagement() {
     setNewUser((prev) => ({ ...prev, [name]: value }));
   };
 
+  // In your UserManagement component
+  // const handleRoleChange = async (userId, newRole) => {
+  //   try {
+  //     const response = await axios.put(`/api/user/update-role/${userId}`, {
+  //       NewRole: newRole
+  //     });
+      
+  //     // Refresh both users and projects
+  //     fetchUsers();
+  //     fetchProjects(); // Make sure you have this function
+      
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error("Role change failed:", error);
+  //     throw error;
+  //   }
+  // };
+  
+  // Add this function near the top of UserManagement component
+  const handleRoleChangeSideEffects = async (userId, newRole, oldRole) => {
+    try {
+      if (oldRole === "Manager" && newRole !== "Manager") {
+        // Handle manager -> non-manager transition
+        const allProjects = await getAllProjects();
+        const managedProjects = allProjects.filter(p => p.manager === users.find(u => u.userId === userId)?.username);
+        
+        // Orphan these projects (they'll show as locked in the UI)
+        // No need to update anything - our existing locked manager logic will handle it
+        console.log(`Orphaned ${managedProjects.length} projects from demoted manager`);
+      }
+      
+      if (newRole === "Manager" && oldRole !== "Manager") {
+        // Handle new manager promotion
+        const allProjects = await getAllProjects();
+        const user = users.find(u => u.userId === userId);
+        
+        // Remove from all member lists
+        const updatePromises = allProjects
+          .filter(p => ensureArray(p.members).includes(user.username))
+          .map(project => {
+            const updatedMembers = ensureArray(project.members).filter(m => m !== user.username);
+            return updateProject(project.id, {
+              ...project,
+              members: updatedMembers
+            });
+          });
+        
+        await Promise.all(updatePromises);
+        console.log(`Removed new manager from ${updatePromises.length} projects`);
+        
+        // Note: Would need similar logic for tasks if you want to remove task assignments
+      }
+    } catch (err) {
+      console.error("Error handling role change side effects:", err);
+      // Don't fail the whole operation - this is secondary
+    }
+  };
+
+  // const handleAddUser = async () => {
+  //   if (!newUser.username || !newUser.password) {
+  //     setError("Username and password are required");
+  //     return;
+  //   }
+    
+  //   try {
+  //     await addUser({
+  //       username: newUser.username,
+  //       password: newUser.password,
+  //       role: newUser.role
+  //     });
+  //     setNewUser({ username: "", password: "", role: roleOptions[0] });
+  //     setAddMode(false);
+  //     await loadUsers();
+  //   } catch (err) {
+  //     setError("Failed to add user: " + (err.response?.data || err.message));
+  //   }
+  // };
+
   const handleAddUser = async () => {
-    if (!newUser.username || !newUser.password) {
-      setError("Username and password are required");
+    // Check for empty fields
+    if (!newUser.username) {
+      alert("Username is required");
       return;
     }
+
+    if (!newUser.password) {
+      alert("Password is required");
+      return;
+    }
+
+    // Check password length
+    if (newUser.password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    // Check for existing username
+    const usernameExists = users.some(
+      user => user.username.toLowerCase() === newUser.username.toLowerCase()
+    );
     
+    if (usernameExists) {
+      alert("Username already exists");
+      return;
+    }
+
     try {
       await addUser({
         username: newUser.username,
@@ -1646,8 +2924,35 @@ export default function UserManagement() {
     setAddMode(false);
   };
 
+  // const handleToggleLock = async (idx) => {
+  //   const user = users[idx];
+  //   try {
+  //     if (user.status === "Active") {
+  //       await lockUser(user.userId);
+  //     } else {
+  //       await unlockUser(user.userId);
+  //     }
+  //     await loadUsers();
+  //   } catch (err) {
+  //     setError("Failed to toggle lock: " + (err.response?.data || err.message));
+  //   }
+  // };
+
   const handleToggleLock = async (idx) => {
     const user = users[idx];
+    
+    // Prevent locking if this is the last active admin
+    if (user.status === "Active" && user.role === "Admin") {
+      const activeAdmins = users.filter(u => 
+        u.role === "Admin" && u.status === "Active" && u.userId !== user.userId
+      );
+      
+      if (activeAdmins.length === 0) {
+        alert("Cannot lock the last active admin user");
+        return;
+      }
+    }
+
     try {
       if (user.status === "Active") {
         await lockUser(user.userId);
@@ -1659,6 +2964,29 @@ export default function UserManagement() {
       setError("Failed to toggle lock: " + (err.response?.data || err.message));
     }
   };
+  
+  const isLastActiveAdmin = (user) => {
+    if (user.role !== "Admin" || user.status === "Locked") return false;
+    return users.filter(u => 
+      u.role === "Admin" && u.status === "Active" && u.userId !== user.userId
+    ).length === 0;
+  };
+
+  const isLockingAllAdmins = (selectedIndices) => {
+    const selectedAdmins = users.filter((user, idx) => 
+      selectedIndices.includes(idx) && 
+      user.role === "Admin" && 
+      user.status === "Active"
+    );
+    
+    const otherActiveAdmins = users.filter((user, idx) => 
+      !selectedIndices.includes(idx) && 
+      user.role === "Admin" && 
+      user.status === "Active"
+    );
+    
+    return selectedAdmins.length > 0 && otherActiveAdmins.length === 0;
+  };
 
   return (
     <div className="p-8 flex flex-col h-[calc(100vh-4rem)]">
@@ -1667,8 +2995,6 @@ export default function UserManagement() {
         {error && <div className="text-red-500 mb-4">{error}</div>}
         
         <button
-          // className="mb-8 bg-mycustomblue text-white font-medium px-4 py-2 rounded"
-          // onClick={() => setAddMode(true)}
           className={`mb-8 bg-mycustomblue text-white font-medium px-4 py-2 rounded ${
             disableAddButton ? 'cursor-not-allowed' : ''
           }`}
@@ -1678,7 +3004,7 @@ export default function UserManagement() {
           Add New User
         </button>
       </div>
-      {/* Bulk action bar */}
+
       {selected.length > 0 && (
         <div className="bg-white border rounded mb-2 px-4 py-2 flex items-center justify-between shadow-sm">
           <span className="text-xs text-gray-800">SELECTED: {selected.length}</span>
@@ -1689,7 +3015,15 @@ export default function UserManagement() {
                   <button onClick={handleBulkEdit} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>EDIT</button>
                 )}
                 <button onClick={handleBulkDelete} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>DELETE</button>
-                <button onClick={handleBulkLock} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>LOCK</button>
+                {/* <button onClick={handleBulkLock} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>LOCK</button> */}
+                <button 
+                  onClick={handleBulkLock} 
+                  className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" 
+                  disabled={disableActions || isLockingAllAdmins(selected)}
+                  title={isLockingAllAdmins(selected) ? "Cannot lock all admin users" : ""}
+                >
+                  LOCK
+                </button>
                 <button onClick={handleBulkUnlock} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>UNLOCK</button>
                 <button onClick={() => setSelected([])} className="bg-white hover:bg-gray-200 px-3 py-1 rounded text-xs" disabled={disableActions}>CANCEL</button>
               </>
@@ -1731,7 +3065,6 @@ export default function UserManagement() {
                       type="checkbox"
                       checked={selected.includes(idx)}
                       onChange={() => handleSelect(idx)}
-                      // disabled={editIndex !== null && editIndex !== idx}
                       disabled={disableActions}
                     />
                   </td>
@@ -1750,16 +3083,23 @@ export default function UserManagement() {
                   </td>
                   <td className="border px-4 py-2 text-sm font-normal">
                     {editIndex === idx ? (
-                      <select
-                        className="border px-2 py-1 rounded w-full"
-                        name="role"
-                        value={editUserForm.role}
-                        onChange={handleChange}
-                      >
-                        {roleOptions.map((role) => (
-                          <option key={role} value={role}>{role}</option>
-                        ))}
-                      </select>
+                      user.role === "Admin" ? (
+                        <div className="flex items-center">
+                          <span>Admin</span>
+                          <span className="text-xs text-gray-500 ml-2">(cannot be changed)</span>
+                        </div>
+                      ) : (
+                        <select
+                          className="border px-2 py-1 rounded w-full"
+                          name="role"
+                          value={editUserForm.role}
+                          onChange={handleChange}
+                        >
+                          {roleOptions.filter(role => role !== "Admin").map((role) => (
+                            <option key={role} value={role}>{role}</option>
+                          ))}
+                        </select>
+                      )
                     ) : (
                       user.role
                     )}
@@ -1796,20 +3136,15 @@ export default function UserManagement() {
                     ) : (
                       <>
                         <button
-                          // className="bg-yellow-400 px-2 py-1 rounded mr-2"
-                          // onClick={() => handleEdit(idx)}
-                          // disabled={user.status === "Locked"}
                           className={`bg-yellow-400 px-2 py-1 rounded mr-2 ${
-                            disableActions ? 'cursor-not-allowed' : ''
+                            disableActions || user.status === "Locked" ? 'cursor-not-allowed' : ''
                           }`}
-                          onClick={() => !disableActions && handleEdit(idx)}
+                          onClick={() => !disableActions && user.status !== "Locked" && handleEdit(idx)}
                           disabled={disableActions || user.status === "Locked"}
                         >
                           EDIT
                         </button>
                         <button
-                          // className="bg-red-500 text-white px-2 py-1 rounded mr-2"
-                          // onClick={() => handleDelete(idx)}
                           className={`bg-red-500 text-white px-2 py-1 rounded mr-2 ${
                             disableActions ? 'cursor-not-allowed' : ''
                           }`}
@@ -1818,11 +3153,7 @@ export default function UserManagement() {
                         >
                           DELETE
                         </button>
-                        <button
-                          // className={`px-2 py-1 rounded text-white ${
-                          //   user.status === "Locked" ? "bg-green-500" : "bg-gray-500"
-                          // }`}
-                          // onClick={() => handleToggleLock(idx)}
+                        {/* <button
                           className={`px-2 py-1 rounded text-white ${
                             user.status === "Locked" ? "bg-green-500" : "bg-gray-500"
                           } ${
@@ -1830,6 +3161,18 @@ export default function UserManagement() {
                           }`}
                           onClick={() => !disableActions && handleToggleLock(idx)}
                           disabled={disableActions}
+                        >
+                          {user.status === "Locked" ? "UNLOCK" : "LOCK"}
+                        </button> */}
+                        <button
+                          className={`px-2 py-1 rounded text-white ${
+                            user.status === "Locked" ? "bg-green-500" : "bg-gray-500"
+                          } ${
+                            disableActions || (user.role === "Admin" && isLastActiveAdmin(user)) ? 'cursor-not-allowed' : ''
+                          }`}
+                          onClick={() => !disableActions && !isLastActiveAdmin(user) && handleToggleLock(idx)}
+                          disabled={disableActions || (user.role === "Admin" && isLastActiveAdmin(user))}
+                          title={user.role === "Admin" && isLastActiveAdmin(user) ? "Cannot lock last admin" : ""}
                         >
                           {user.status === "Locked" ? "UNLOCK" : "LOCK"}
                         </button>
@@ -1877,7 +3220,7 @@ export default function UserManagement() {
                       type="password"
                       value={newUser.password}
                       onChange={handleAddChange}
-                      placeholder="Password"
+                      placeholder="Password (min 6 characters)"
                     />
                     <button
                       className="bg-green-500 text-white px-2 py-1 rounded mr-2"
@@ -1896,7 +3239,7 @@ export default function UserManagement() {
               )}
             </tbody>
           </table>
-          </div>
+        </div>
       </div>
     </div>
   );

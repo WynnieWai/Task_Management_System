@@ -309,11 +309,37 @@ public async Task<IActionResult> GetAdminStats()
     {
         Console.WriteLine("ContributorStats called for username: " + username);
         // Load all tasks where this user is a member
-        var allTasks = await _context.Tasks
-            .Where(t => t.Members != null)
+        // var allTasks = await _context.Tasks
+        //     .Where(t => t.Members != null)
+        //     .ToListAsync();
+        // allTasks = allTasks
+        //     .Where(t => t.Members.Split(',').Any(m => m.Trim().Equals(username, StringComparison.OrdinalIgnoreCase)))
+        //     .ToList();
+
+        // First get all valid projects (active projects with active managers)
+        var validProjectIds = await _context.Projects
+            .Where(p => p.Status == "Active")
+            .Join(_context.Users,
+                p => p.Manager,
+                u => u.Username,
+                (p, u) => new { Project = p, Manager = u })
+            .Where(x => x.Manager.Status == "Active" && x.Manager.Role == "Manager")
+            .Select(x => x.Project.Id)
             .ToListAsync();
+
+        // Then get all tasks from these projects where the user is a member
+        // Note: We have to handle the member check differently for EF translation
+        var allTasks = await _context.Tasks
+            .Where(t => validProjectIds.Contains(t.ProjectId))
+            .Where(t => t.Members != null && t.Members.Contains(username))
+            .ToListAsync();
+
+        // Now filter in memory for tasks where the user is a member
         allTasks = allTasks
-            .Where(t => t.Members.Split(',').Any(m => m.Trim().Equals(username, StringComparison.OrdinalIgnoreCase)))
+            .Where(t => t.Members != null && 
+                    t.Members.Split(',')
+                                .Select(m => m.Trim())
+                                .Any(m => m.Equals(username, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
         var totalTasks = allTasks.Count;
